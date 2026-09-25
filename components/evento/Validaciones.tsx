@@ -7,7 +7,7 @@ import { mensajeDe, pedir } from "@/lib/cliente";
 import { formatoFechaHora } from "@/lib/fechas";
 import type { DetalleEvento } from "@/lib/db/types";
 
-/** El representante de ventas a cargo firma que revisó el evento y está al tanto. */
+/** El representante de la institución firma que revisó el evento y está al tanto. */
 export default function Validaciones({ detalle, onCambio }: { detalle: DetalleEvento; onCambio: () => void }) {
   const { evento, validaciones, permisos } = detalle;
   const firmaRef = useRef<FirmaCanvasHandle | null>(null);
@@ -38,7 +38,7 @@ export default function Validaciones({ detalle, onCambio }: { detalle: DetalleEv
   return (
     <section className="tarjeta p-5">
       <h2 className="mb-1 font-bold">Validación del representante</h2>
-      <p className="mb-4 text-xs text-zinc-500">El representante de ventas a cargo firma que revisó el evento y está atento a que todo se cumpla.</p>
+      <p className="mb-4 text-xs text-zinc-500">El representante de la institución (ej. el jefe médico) firma que revisó el evento y está atento a que todo se cumpla.</p>
 
       {validaciones.length === 0 ? (
         <p className="mb-4 text-sm text-amber-700">Todavía no hay validaciones del representante.</p>
@@ -50,7 +50,7 @@ export default function Validaciones({ detalle, onCambio }: { detalle: DetalleEv
               <img src={`/api/archivos/${v.firmaId}`} alt="Firma" className="h-14 rounded border border-zinc-300 bg-white" />
               <div>
                 <p className="font-semibold">
-                  ✔ {v.usuarioNombre ?? "Representante"} — {formatoFechaHora(v.creadoEn)}
+                  ✔ {v.usuarioNombre ?? "Representante de la institución"} — {formatoFechaHora(v.creadoEn)}
                 </p>
                 {v.observaciones && <p className="text-zinc-600 dark:text-zinc-300">{v.observaciones}</p>}
               </div>

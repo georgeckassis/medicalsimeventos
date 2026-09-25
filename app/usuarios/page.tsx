@@ -1,13 +1,20 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Crud from "@/components/Crud";
 import Encabezado from "@/components/Encabezado";
 import { useSesion } from "@/components/Sesion";
-import { NOMBRE_ROL, ROLES_ASIGNABLES, type Usuario } from "@/lib/db/types";
+import { pedir } from "@/lib/cliente";
+import { NOMBRE_ROL, ROLES_ASIGNABLES, type Institucion, type Usuario } from "@/lib/db/types";
 
 export default function UsuariosPage() {
   const { sesion } = useSesion();
   const gestor = sesion?.usuario.rol === "general" || sesion?.usuario.rol === "superadmin";
+  const [instituciones, setInstituciones] = useState<Institucion[]>([]);
+
+  useEffect(() => {
+    pedir<Institucion[]>("/api/instituciones").then(setInstituciones).catch(() => {});
+  }, []);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
@@ -26,6 +33,14 @@ export default function UsuariosPage() {
             { clave: "nombre", etiqueta: "Nombre y apellido", requerido: true },
             { clave: "email", etiqueta: "Mail (para entrar)", tipo: "email", requerido: true },
             { clave: "rol", etiqueta: "Rol", tipo: "opciones", opciones: ROLES_ASIGNABLES.map((r) => ({ valor: r, etiqueta: NOMBRE_ROL[r] })) },
+            {
+              clave: "institucionId",
+              etiqueta: "Institución",
+              tipo: "opciones",
+              opciones: [{ valor: "", etiqueta: "— Elegí —" }, ...instituciones.map((i) => ({ valor: String(i.id), etiqueta: i.nombre }))],
+              visible: (v) => v.rol === "representante",
+              ayuda: "Ve todos los eventos de esta institución.",
+            },
             { clave: "telefono", etiqueta: "Teléfono / WhatsApp", ayuda: "Para los avisos por WhatsApp." },
             { clave: "dni", etiqueta: "DNI", ayuda: "Obligatorio para choferes (autorización de ingreso)." },
             {
@@ -41,6 +56,7 @@ export default function UsuariosPage() {
             nombre: u?.nombre ?? "",
             email: u?.email ?? "",
             rol: u?.rol ?? "logistica",
+            institucionId: u?.institucionId ? String(u.institucionId) : "",
             telefono: u?.telefono ?? "",
             dni: u?.dni ?? "",
             password: "",
@@ -48,8 +64,9 @@ export default function UsuariosPage() {
           })}
           aCuerpo={(v) => ({
             ...v,
-            // Las instituciones que atiende cada representante se asignan desde Instituciones.
-            institucionId: null,
+            // Solo el representante de la institución se asocia a una; las que atiende
+            // cada representante de ventas se asignan desde Instituciones.
+            institucionId: v.rol === "representante" && v.institucionId ? Number(v.institucionId) : null,
             password: v.password || undefined,
             activo: v.activo === "si",
           })}
@@ -68,6 +85,9 @@ export default function UsuariosPage() {
               render: (u) => (
                 <>
                   {NOMBRE_ROL[u.rol]}
+                  {u.rol === "representante" && u.institucionNombre && (
+                    <span className="block text-xs text-zinc-500">{u.institucionNombre}</span>
+                  )}
                 </>
               ),
             },

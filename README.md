@@ -14,10 +14,12 @@ proyecto separado, con su propia base de datos.
 | Rol | Qué hace |
 |---|---|
 | **Super admin** | Acceso total, solo para MedicalSim. No aparece en ningún listado. Se crea solo al arrancar (`SUPERADMIN_EMAIL`). |
-| **Encargado general** | Único que crea, edita o borra eventos, fechas y horarios de armado/desarmado; arma la lista de objetos desde el inventario; asigna el representante de ventas de cada institución y el que queda a cargo de cada evento; carga inventario, instituciones y usuarios; crea y asigna tareas; reabre etapas firmadas. |
+| **Encargado general** | Único que crea, edita o borra eventos, fechas y horarios de armado/desarmado; arma la lista de objetos desde el inventario; asigna el representante de ventas de cada institución y, en cada evento, el instructor y el representante de ventas a cargo; carga inventario, instituciones y usuarios; crea y asigna tareas; reabre etapas firmadas. |
 | **Encargado de logística** | Ve el calendario; carga y edita el inventario del depósito (no lo borra); carga horarios de carga en depósito, salida, retiro y devolución, más el chofer y el vehículo; tilda los objetos cargados y cierra cada etapa con firma y foto. |
 | **Chofer** | Ve el calendario y el checklist; tilda objetos y firma carga, descarga y devolución al depósito. |
-| **Representante de ventas** | Vendedor de MedicalSim que atiende una o más instituciones y queda a cargo de sus eventos junto al instructor. Ve los eventos que tiene a cargo y los de las instituciones que atiende (checklist, horarios, alumnos) sin poder tocar nada, y firma una validación de que revisó el evento. |
+| **Instructor** (MedicalSim) | Ve los eventos donde está asignado como instructor a cargo. Solo mira. Recibe los avisos de incumplimiento de sus eventos. |
+| **Representante de ventas** (MedicalSim) | Vendedor que atiende una o más instituciones. Ve los eventos que tiene a cargo y los de las instituciones que atiende. Solo mira. Recibe los avisos de incumplimiento de sus eventos. |
+| **Representante de la institución** | Del cliente (ej. el jefe médico del hospital). Ve los eventos de su institución sin poder tocar nada, y firma una validación de que revisó el evento. |
 
 Nadie más que el encargado general (o el super admin) puede borrar cosas.
 Los usuarios no se borran: se desactivan, para no perder quién tildó o firmó.
@@ -54,7 +56,8 @@ hora contra lo tildado:
 - **Incumplimiento**: llegó la hora de una etapa y no está tildada y cerrada
   con firma; o se cerró una etapa con faltantes (ej. volvieron 2 de 3 TV); o
   venció una tarea. Va a **todos los encargados generales + el encargado de
-  logística del evento** (o a todos los de logística si no hay uno asignado),
+  logística del evento** (o a todos los de logística si no hay uno asignado)
+  + el instructor y el representante de ventas a cargo del evento,
   más los mails extra de Configuración y los del propio evento.
 - **Logística incompleta**: a menos de 48 h del evento falta horario de carga,
   salida, chofer o vehículo.

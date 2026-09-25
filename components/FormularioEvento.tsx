@@ -15,7 +15,8 @@ interface Campos {
   sede: string;
   direccion: string;
   institucionId: string;
-  representanteId: string;
+  instructorId: string;
+  vendedorId: string;
   cantidadAlumnos: string;
   instructores: string;
   estado: EstadoEvento;
@@ -34,7 +35,8 @@ function desdeEvento(e?: Evento): Campos {
     sede: e?.sede ?? "",
     direccion: e?.direccion ?? "",
     institucionId: e?.institucionId ? String(e.institucionId) : "",
-    representanteId: e?.representanteId ? String(e.representanteId) : "",
+    instructorId: e?.instructorId ? String(e.instructorId) : "",
+    vendedorId: e?.vendedorId ? String(e.vendedorId) : "",
     cantidadAlumnos: e ? String(e.cantidadAlumnos) : "",
     instructores: e?.instructores ?? "",
     estado: e?.estado ?? "planificado",
@@ -50,14 +52,18 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
   const router = useRouter();
   const [campos, setCampos] = useState<Campos>(desdeEvento(evento));
   const [instituciones, setInstituciones] = useState<Institucion[]>([]);
-  const [representantes, setRepresentantes] = useState<Usuario[]>([]);
+  const [instructores, setInstructores] = useState<Usuario[]>([]);
+  const [vendedores, setVendedores] = useState<Usuario[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     pedir<Institucion[]>("/api/instituciones").then(setInstituciones).catch((e) => setError(mensajeDe(e)));
-    pedir<Usuario[]>("/api/usuarios?rol=representante")
-      .then((u) => setRepresentantes(u.filter((r) => r.activo)))
+    pedir<Usuario[]>("/api/usuarios?rol=instructor")
+      .then((u) => setInstructores(u.filter((r) => r.activo)))
+      .catch((e) => setError(mensajeDe(e)));
+    pedir<Usuario[]>("/api/usuarios?rol=vendedor")
+      .then((u) => setVendedores(u.filter((r) => r.activo)))
       .catch((e) => setError(mensajeDe(e)));
   }, []);
 
@@ -76,7 +82,8 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
         armadoEn: localAIso(campos.armadoEn),
         desarmadoEn: localAIso(campos.desarmadoEn),
         institucionId: campos.institucionId ? Number(campos.institucionId) : null,
-        representanteId: campos.representanteId ? Number(campos.representanteId) : null,
+        instructorId: campos.instructorId ? Number(campos.instructorId) : null,
+        vendedorId: campos.vendedorId ? Number(campos.vendedorId) : null,
         cantidadAlumnos: Number(campos.cantidadAlumnos) || 0,
       };
       if (!cuerpo.inicio || !cuerpo.fin) throw new Error("Completá la fecha y hora de inicio y de fin.");
@@ -127,10 +134,40 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
           <label className="etiqueta">Cantidad de alumnos</label>
           <input className="campo" type="number" min={0} value={campos.cantidadAlumnos} onChange={set("cantidadAlumnos")} />
         </div>
+      </section>
+
+      <section className="tarjeta grid gap-4 p-5 sm:grid-cols-2">
+        <h2 className="font-bold sm:col-span-2">A cargo por MedicalSim</h2>
         <div>
-          <label className="etiqueta">Instructores</label>
-          <input className="campo" value={campos.instructores} onChange={set("instructores")} placeholder="Nombres separados por coma" />
+          <label className="etiqueta">Instructor a cargo</label>
+          <select className="campo" value={campos.instructorId} onChange={set("instructorId")}>
+            <option value="">— Sin asignar —</option>
+            {instructores.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.nombre}
+              </option>
+            ))}
+          </select>
         </div>
+        <div>
+          <label className="etiqueta">Representante de ventas</label>
+          <select className="campo" value={campos.vendedorId} onChange={set("vendedorId")}>
+            <option value="">— Sin asignar —</option>
+            {vendedores.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.nombre}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-zinc-500">Se completa con el que atiende la institución; se puede cambiar.</p>
+        </div>
+        <div className="sm:col-span-2">
+          <label className="etiqueta">Otros instructores / ayudantes</label>
+          <input className="campo" value={campos.instructores} onChange={set("instructores")} placeholder="Nombres separados por coma (opcional)" />
+        </div>
+        <p className="text-xs text-zinc-500 sm:col-span-2">
+          El instructor y el representante de ventas ven el evento y reciben los avisos de incumplimiento. Se dan de alta en Usuarios.
+        </p>
       </section>
 
       <section className="tarjeta grid gap-4 p-5 sm:grid-cols-2">
@@ -142,11 +179,11 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
             value={campos.institucionId}
             onChange={(e) => {
               const institucion = instituciones.find((i) => String(i.id) === e.target.value);
-              // Se propone el representante que atiende esa institución (se puede cambiar).
+              // Se propone el representante de ventas que atiende esa institución (se puede cambiar).
               setCampos((c) => ({
                 ...c,
                 institucionId: e.target.value,
-                representanteId: institucion?.representanteId ? String(institucion.representanteId) : c.representanteId,
+                vendedorId: institucion?.vendedorId ? String(institucion.vendedorId) : c.vendedorId,
               }));
             }}
           >
@@ -157,20 +194,7 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className="etiqueta">Representante de ventas a cargo</label>
-          <select className="campo" value={campos.representanteId} onChange={set("representanteId")}>
-            <option value="">— Sin asignar —</option>
-            {representantes.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.nombre}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-zinc-500">
-            Vendedor de MedicalSim a cargo del evento junto al instructor. Se completa con el que atiende la institución.
-          </p>
+          <p className="mt-1 text-xs text-zinc-500">El representante de la institución (ej. el jefe médico) ve todos sus eventos.</p>
         </div>
         <div>
           <label className="etiqueta">Sede</label>

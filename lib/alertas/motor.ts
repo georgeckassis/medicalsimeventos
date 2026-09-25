@@ -79,7 +79,9 @@ async function calcularAlertasDeseadas(ahora: Date): Promise<{ deseadas: AlertaD
     const cerradas = new Set(cierres.filter((c) => c.evento_id === eventoId).map((c) => c.etapa as Etapa));
     const logistica = e.logistica_id ? { roles: [] as Rol[], ids: [e.logistica_id as number] } : { roles: ["logistica"] as Rol[], ids: [] };
     const emailsExtra = [...emailsGlobales, ...listaEmails(e.emails_notificacion)];
-    const paraIncumplimiento = { roles: ["general", ...logistica.roles] as Rol[], ids: logistica.ids, emailsExtra };
+    // El instructor y el representante de ventas a cargo también reciben los incumplimientos.
+    const aCargo = [e.instructor_id, e.vendedor_id].filter((id): id is number => typeof id === "number");
+    const paraIncumplimiento = { roles: ["general", ...logistica.roles] as Rol[], ids: [...logistica.ids, ...aCargo], emailsExtra };
     const paraAviso = { roles: logistica.roles, ids: [...logistica.ids, ...(e.chofer_id ? [e.chofer_id as number] : [])], emailsExtra: [] };
 
     const horaEtapa: Record<Etapa, string | null> = {

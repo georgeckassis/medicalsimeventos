@@ -10,18 +10,18 @@ function mapRow(row: any): Institucion {
     contacto: row.contacto,
     telefono: row.telefono,
     email: row.email,
-    representanteId: row.representante_id ?? null,
-    representanteNombre: row.representante_nombre ?? null,
+    vendedorId: row.vendedor_id ?? null,
+    vendedorNombre: row.vendedor_nombre ?? null,
   };
 }
 
-export type InstitucionInput = Omit<Institucion, "id" | "representanteNombre">;
+export type InstitucionInput = Omit<Institucion, "id" | "vendedorNombre">;
 
 export async function listarInstituciones(): Promise<Institucion[]> {
   const sql = await db();
   const rows = await sql`
-    SELECT i.*, u.nombre AS representante_nombre
-    FROM instituciones i LEFT JOIN usuarios u ON u.id = i.representante_id
+    SELECT i.*, u.nombre AS vendedor_nombre
+    FROM instituciones i LEFT JOIN usuarios u ON u.id = i.vendedor_id
     ORDER BY i.nombre
   `;
   return rows.map(mapRow);
@@ -30,8 +30,8 @@ export async function listarInstituciones(): Promise<Institucion[]> {
 async function obtenerInstitucion(id: number): Promise<Institucion | null> {
   const sql = await db();
   const rows = await sql`
-    SELECT i.*, u.nombre AS representante_nombre
-    FROM instituciones i LEFT JOIN usuarios u ON u.id = i.representante_id
+    SELECT i.*, u.nombre AS vendedor_nombre
+    FROM instituciones i LEFT JOIN usuarios u ON u.id = i.vendedor_id
     WHERE i.id = ${id}
   `;
   return rows.length ? mapRow(rows[0]) : null;
@@ -40,8 +40,8 @@ async function obtenerInstitucion(id: number): Promise<Institucion | null> {
 export async function crearInstitucion(input: InstitucionInput): Promise<Institucion> {
   const sql = await db();
   const rows = await sql`
-    INSERT INTO instituciones (nombre, direccion, contacto, telefono, email, representante_id)
-    VALUES (${input.nombre}, ${input.direccion}, ${input.contacto}, ${input.telefono}, ${input.email}, ${input.representanteId})
+    INSERT INTO instituciones (nombre, direccion, contacto, telefono, email, vendedor_id)
+    VALUES (${input.nombre}, ${input.direccion}, ${input.contacto}, ${input.telefono}, ${input.email}, ${input.vendedorId})
     RETURNING id
   `;
   return (await obtenerInstitucion(rows[0].id))!;
@@ -51,7 +51,7 @@ export async function actualizarInstitucion(id: number, input: InstitucionInput)
   const sql = await db();
   const rows = await sql`
     UPDATE instituciones SET nombre = ${input.nombre}, direccion = ${input.direccion}, contacto = ${input.contacto},
-      telefono = ${input.telefono}, email = ${input.email}, representante_id = ${input.representanteId}
+      telefono = ${input.telefono}, email = ${input.email}, vendedor_id = ${input.vendedorId}
     WHERE id = ${id} RETURNING id
   `;
   return rows.length ? obtenerInstitucion(id) : null;

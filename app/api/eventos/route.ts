@@ -1,6 +1,6 @@
 import { after, NextRequest, NextResponse } from "next/server";
 import { leerCuerpo, requerirUsuario, respuestaError } from "@/lib/api";
-import { validarRepresentante } from "@/lib/acceso";
+import { validarAsignado } from "@/lib/acceso";
 import { esGestor } from "@/lib/auth/permisos";
 import { revisarAlertasSiCorresponde } from "@/lib/alertas/motor";
 import { crearEvento, listarEventos, registrarHistorial } from "@/lib/db/eventos";
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const eventos = await listarEventos({
       desde: fecha("desde"),
       hasta: fecha("hasta"),
-      ...(usuario.rol === "representante" ? { representanteId: usuario.id } : {}),
+      usuario,
     });
     return NextResponse.json(eventos);
   } catch (error) {
@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
   try {
     const usuario = await requerirUsuario((u) => esGestor(u.rol));
     const input = await leerCuerpo(req, esquemaEvento);
-    await validarRepresentante(input.representanteId);
+    await validarAsignado(input.instructorId, "instructor");
+    await validarAsignado(input.vendedorId, "vendedor");
     const id = await crearEvento(input, usuario.id);
     await registrarHistorial(id, usuario.id, "Creó el evento");
     after(() => revisarAlertasSiCorresponde(true));

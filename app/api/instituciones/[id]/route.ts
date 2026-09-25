@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { idDeParams, leerCuerpo, requerirUsuario, respuestaError } from "@/lib/api";
-import { validarRepresentante } from "@/lib/acceso";
+import { validarAsignado } from "@/lib/acceso";
 import { esGestor } from "@/lib/auth/permisos";
 import { actualizarInstitucion, eliminarInstitucion } from "@/lib/db/instituciones";
 import { esquemaInstitucion, UNICIDAD_INSTITUCION } from "@/lib/esquemas";
@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     await requerirUsuario((u) => esGestor(u.rol));
     const id = idDeParams((await params).id);
     const input = await leerCuerpo(req, esquemaInstitucion);
-    await validarRepresentante(input.representanteId);
+    await validarAsignado(input.vendedorId, "vendedor");
     const institucion = await actualizarInstitucion(id, input);
     if (!institucion) return NextResponse.json({ error: "No encontrado." }, { status: 404 });
     return NextResponse.json(institucion);

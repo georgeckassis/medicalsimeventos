@@ -10,18 +10,18 @@ import type { Institucion, Usuario } from "@/lib/db/types";
 export default function InstitucionesPage() {
   const { sesion } = useSesion();
   const gestor = sesion?.usuario.rol === "general" || sesion?.usuario.rol === "superadmin";
-  const [representantes, setRepresentantes] = useState<Usuario[]>([]);
+  const [vendedores, setVendedores] = useState<Usuario[]>([]);
 
   useEffect(() => {
-    pedir<Usuario[]>("/api/usuarios?rol=representante")
-      .then((u) => setRepresentantes(u.filter((r) => r.activo)))
+    pedir<Usuario[]>("/api/usuarios?rol=vendedor")
+      .then((u) => setVendedores(u.filter((r) => r.activo)))
       .catch(() => {});
   }, []);
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <Encabezado
         titulo="Instituciones"
-        descripcion="Clientes de los cursos. Cada institución tiene su representante de ventas de MedicalSim, que ve todos sus eventos."
+        descripcion="Clientes de los cursos. Cada institución tiene su representante de ventas de MedicalSim; su representante (ej. el jefe médico) se da de alta en Usuarios."
       />
       {sesion && (
         <Crud<Institucion>
@@ -30,14 +30,14 @@ export default function InstitucionesPage() {
           puedeEditar={gestor}
           puedeBorrar={gestor}
           textoNuevo="+ Agregar institución"
-          mensajeBorrar={(i) => `¿Eliminar "${i.nombre}"? Sus eventos y representantes quedan sin institución.`}
+          mensajeBorrar={(i) => `¿Eliminar "${i.nombre}"? Sus eventos y vendedores quedan sin institución.`}
           campos={[
             { clave: "nombre", etiqueta: "Nombre", requerido: true },
             {
-              clave: "representanteId",
+              clave: "vendedorId",
               etiqueta: "Representante de ventas",
               tipo: "opciones",
-              opciones: [{ valor: "", etiqueta: "— Sin asignar —" }, ...representantes.map((r) => ({ valor: String(r.id), etiqueta: r.nombre }))],
+              opciones: [{ valor: "", etiqueta: "— Sin asignar —" }, ...vendedores.map((r) => ({ valor: String(r.id), etiqueta: r.nombre }))],
               ayuda: "Vendedor de MedicalSim que atiende esta institución. Se da de alta en Usuarios.",
             },
             { clave: "direccion", etiqueta: "Dirección" },
@@ -51,12 +51,12 @@ export default function InstitucionesPage() {
             contacto: i?.contacto ?? "",
             telefono: i?.telefono ?? "",
             email: i?.email ?? "",
-            representanteId: i?.representanteId ? String(i.representanteId) : "",
+            vendedorId: i?.vendedorId ? String(i.vendedorId) : "",
           })}
-          aCuerpo={(v) => ({ ...v, representanteId: v.representanteId ? Number(v.representanteId) : null })}
+          aCuerpo={(v) => ({ ...v, vendedorId: v.vendedorId ? Number(v.vendedorId) : null })}
           columnas={[
             { titulo: "Institución", render: (i) => <span className="font-medium">{i.nombre}</span> },
-            { titulo: "Representante de ventas", render: (i) => i.representanteNombre ?? <span className="text-amber-600">Sin asignar</span> },
+            { titulo: "Representante de ventas", render: (i) => i.vendedorNombre ?? <span className="text-amber-600">Sin asignar</span> },
             { titulo: "Dirección", render: (i) => i.direccion || "—" },
             {
               titulo: "Contacto",

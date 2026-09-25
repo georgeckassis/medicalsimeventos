@@ -1,17 +1,15 @@
 import { db } from "./client";
+import { filtroVisibilidad } from "./eventos";
 import { aIso, aIsoONull } from "@/lib/fechas";
 import type { Alerta, Usuario } from "./types";
 
 /**
- * Qué alertas ve cada uno: gestores todas; logística y chofer las de todos
- * los eventos más las de sus tareas; el representante de ventas solo las de
- * los eventos que tiene a cargo o de las instituciones que atiende, más las
- * de sus tareas.
+ * Qué alertas ve cada uno: las de los eventos que puede ver (según su rol,
+ * ver lib/acceso.ts) más las de sus propias tareas; los gestores, todas.
  */
 export async function listarAlertas(usuario: Usuario, opciones: { soloActivas: boolean; eventoId?: number }): Promise<Alerta[]> {
   const sql = await db();
   const gestor = usuario.rol === "superadmin" || usuario.rol === "general";
-  const representante = usuario.rol === "representante";
   const rows = await sql`
     SELECT a.*, e.nombre AS evento_nombre, t.responsable_id
     FROM alertas a
@@ -23,7 +21,7 @@ export async function listarAlertas(usuario: Usuario, opciones: { soloActivas: b
       AND (
         ${gestor}
         OR (a.tarea_id IS NOT NULL AND t.responsable_id = ${usuario.id})
-        OR (a.tarea_id IS NULL AND a.evento_id IS NOT NULL AND (NOT ${representante} OR e.representante_id = ${usuario.id} OR i.representante_id = ${usuario.id}))
+        OR (a.tarea_id IS NULL AND a.evento_id IS NOT NULL AND ${filtroVisibilidad(sql, usuario)})
       )
     ORDER BY a.resuelta_en IS NULL DESC, a.severidad = 'incumplimiento' DESC, a.creada_en DESC
     LIMIT 200

@@ -258,17 +258,31 @@ async function crearTablas(sql: postgres.ISql): Promise<void> {
     )
   `;
 
-  // Representante de ventas de MedicalSim: el que atiende la cuenta de cada
-  // institución, y el que queda a cargo de cada evento (junto al instructor).
-  await sql`ALTER TABLE eventos ADD COLUMN IF NOT EXISTS representante_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL`;
-  await sql`ALTER TABLE instituciones ADD COLUMN IF NOT EXISTS representante_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL`;
-  // Antes el representante se asociaba a una institución desde su usuario;
-  // se pasa esa relación a la institución (una sola vez, si está vacía).
-  await sql`
-    UPDATE instituciones i SET representante_id = u.id
-    FROM usuarios u
-    WHERE u.institucion_id = i.id AND u.rol = 'representante' AND i.representante_id IS NULL
+  // Personas de MedicalSim a cargo de cada evento: el instructor y el
+  // representante de ventas (que además atiende la cuenta de la institución).
+  // El representante de la institución (ej. el jefe médico) es otro rol: se
+  // asocia a su institución desde su usuario (usuarios.institucion_id).
+  await sql`ALTER TABLE eventos ADD COLUMN IF NOT EXISTS instructor_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL`;
+  await sql`ALTER TABLE eventos ADD COLUMN IF NOT EXISTS vendedor_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL`;
+  await sql`ALTER TABLE instituciones ADD COLUMN IF NOT EXISTS vendedor_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL`;
+
+  // Una versión anterior guardaba en instituciones.representante_id al
+  // representante de la institución; se le devuelve esa institución a su
+  // usuario (si la había perdido) y se quitan las columnas viejas.
+  const [{ existe }] = await sql`
+    SELECT EXISTS (
+      SELECT 1 FROM information_schema.columns WHERE table_name = 'instituciones' AND column_name = 'representante_id'
+    ) AS existe
   `;
+  if (existe) {
+    await sql`
+      UPDATE usuarios u SET institucion_id = i.id
+      FROM instituciones i
+      WHERE i.representante_id = u.id AND u.rol = 'representante' AND u.institucion_id IS NULL
+    `;
+    await sql`ALTER TABLE instituciones DROP COLUMN representante_id`;
+    await sql`ALTER TABLE eventos DROP COLUMN IF EXISTS representante_id`;
+  }
 
   await sql`CREATE INDEX IF NOT EXISTS eventos_inicio_idx ON eventos (inicio)`;
   await sql`CREATE INDEX IF NOT EXISTS historial_evento_idx ON historial (evento_id, creado_en DESC)`;

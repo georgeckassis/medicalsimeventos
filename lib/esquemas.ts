@@ -23,7 +23,7 @@ export const esquemaInstitucion = z.object({
   contacto: textoOpcional,
   telefono: textoOpcional,
   email: textoOpcional,
-  representanteId: z.number().int().positive().nullable().optional().default(null),
+  vendedorId: z.number().int().positive().nullable().optional().default(null),
 });
 export const UNICIDAD_INSTITUCION = { instituciones_nombre_key: "Ya existe una institución con ese nombre." };
 
@@ -56,7 +56,8 @@ export const esquemaEvento = z
     sede: textoOpcional,
     direccion: textoOpcional,
     institucionId: idOpcional,
-    representanteId: idOpcional,
+    instructorId: idOpcional,
+    vendedorId: idOpcional,
     cantidadAlumnos: z.number().int().min(0).optional().default(0),
     instructores: textoOpcional,
     estado: z.enum(ESTADOS_EVENTO).optional().default("planificado"),

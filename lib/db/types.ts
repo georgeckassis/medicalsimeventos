@@ -1,14 +1,16 @@
-export const ROLES = ["superadmin", "general", "logistica", "chofer", "representante"] as const;
+export const ROLES = ["superadmin", "general", "logistica", "chofer", "instructor", "vendedor", "representante"] as const;
 export type Rol = (typeof ROLES)[number];
 /** Roles que se pueden asignar desde la pantalla de usuarios (superadmin no). */
-export const ROLES_ASIGNABLES = ["general", "logistica", "chofer", "representante"] as const;
+export const ROLES_ASIGNABLES = ["general", "logistica", "chofer", "instructor", "vendedor", "representante"] as const;
 
 export const NOMBRE_ROL: Record<Rol, string> = {
   superadmin: "Super admin",
   general: "Encargado general",
   logistica: "Encargado de logística",
   chofer: "Chofer",
-  representante: "Representante de ventas",
+  instructor: "Instructor",
+  vendedor: "Representante de ventas",
+  representante: "Representante de la institución",
 };
 
 export const ESTADOS_EVENTO = ["planificado", "confirmado", "en_curso", "finalizado", "cancelado"] as const;
@@ -59,8 +61,8 @@ export interface Institucion {
   telefono: string;
   email: string;
   /** Representante de ventas de MedicalSim que atiende esta institución. */
-  representanteId: number | null;
-  representanteNombre: string | null;
+  vendedorId: number | null;
+  vendedorNombre: string | null;
 }
 
 export interface Vehiculo {
@@ -90,10 +92,12 @@ export interface EventoResumen {
   sede: string;
   institucionId: number | null;
   institucionNombre: string | null;
-  /** Representante de ventas a cargo del evento (junto al instructor). */
-  representanteId: number | null;
+  /** Instructor de MedicalSim a cargo del evento. */
+  instructorId: number | null;
+  /** Representante de ventas de MedicalSim a cargo del evento. */
+  vendedorId: number | null;
   /** Representante de ventas que atiende la institución del evento. */
-  institucionRepresentanteId: number | null;
+  institucionVendedorId: number | null;
   cantidadAlumnos: number;
   estado: EstadoEvento;
   armadoEn: string | null;
@@ -110,7 +114,8 @@ export interface Evento extends EventoResumen {
   instructores: string;
   observaciones: string;
   emailsNotificacion: string;
-  representanteNombre: string | null;
+  instructorNombre: string | null;
+  vendedorNombre: string | null;
   logisticaId: number | null;
   logisticaNombre: string | null;
   choferId: number | null;
