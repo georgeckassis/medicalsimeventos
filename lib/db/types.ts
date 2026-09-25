@@ -87,6 +87,8 @@ export interface EventoResumen {
   sede: string;
   institucionId: number | null;
   institucionNombre: string | null;
+  /** Representante asignado a cargo del evento (además de los de la institución). */
+  representanteId: number | null;
   cantidadAlumnos: number;
   estado: EstadoEvento;
   armadoEn: string | null;
@@ -103,6 +105,7 @@ export interface Evento extends EventoResumen {
   instructores: string;
   observaciones: string;
   emailsNotificacion: string;
+  representanteNombre: string | null;
   logisticaId: number | null;
   logisticaNombre: string | null;
   choferId: number | null;

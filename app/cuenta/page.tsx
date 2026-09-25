@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Encabezado from "@/components/Encabezado";
+import CampoPassword from "@/components/CampoPassword";
 import MensajeError from "@/components/MensajeError";
 import { useSesion } from "@/components/Sesion";
 import { mensajeDe, pedir } from "@/lib/cliente";
@@ -52,15 +53,15 @@ export default function CuentaPage() {
         <h2 className="font-bold">Cambiar contraseña</h2>
         <div>
           <label className="etiqueta">Contraseña actual</label>
-          <input className="campo" type="password" autoComplete="current-password" required value={actual} onChange={(e) => setActual(e.target.value)} />
+          <CampoPassword valor={actual} onCambio={setActual} autoComplete="current-password" requerido />
         </div>
         <div>
           <label className="etiqueta">Contraseña nueva (mínimo 8 caracteres)</label>
-          <input className="campo" type="password" autoComplete="new-password" required minLength={8} value={nueva} onChange={(e) => setNueva(e.target.value)} />
+          <CampoPassword valor={nueva} onCambio={setNueva} autoComplete="new-password" requerido minimo={8} />
         </div>
         <div>
           <label className="etiqueta">Repetí la contraseña nueva</label>
-          <input className="campo" type="password" autoComplete="new-password" required value={repetida} onChange={(e) => setRepetida(e.target.value)} />
+          <CampoPassword valor={repetida} onCambio={setRepetida} autoComplete="new-password" requerido />
         </div>
         {error && <MensajeError mensaje={error} />}
         {ok && <p className="text-sm text-emerald-700">Contraseña actualizada.</p>}

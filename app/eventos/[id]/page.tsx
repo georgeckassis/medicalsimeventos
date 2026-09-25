@@ -176,6 +176,7 @@ function PantallaEvento({ id }: { id: string }) {
             </Dato>
             <Dato titulo="Instructores">{evento.instructores}</Dato>
             <Dato titulo="Institución">{evento.institucionNombre}</Dato>
+            <Dato titulo="Representante a cargo">{evento.representanteNombre}</Dato>
             <Dato titulo="Sede">{evento.sede}</Dato>
             <Dato titulo="Dirección">{evento.direccion}</Dato>
             <Dato titulo="Armado">{formatoFechaHora(evento.armadoEn)}</Dato>

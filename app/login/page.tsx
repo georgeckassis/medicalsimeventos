@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import CampoPassword from "@/components/CampoPassword";
 import { mensajeDe, pedir } from "@/lib/cliente";
 
 function FormularioLogin() {
@@ -51,15 +52,7 @@ function FormularioLogin() {
       <label className="etiqueta" htmlFor="password">
         Contraseña
       </label>
-      <input
-        id="password"
-        type="password"
-        autoComplete="current-password"
-        required
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="campo"
-      />
+      <CampoPassword id="password" valor={password} onCambio={setPassword} autoComplete="current-password" requerido />
       {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
       <button type="submit" disabled={enviando} className="boton mt-5 w-full">
         {enviando ? "Entrando…" : "Entrar"}

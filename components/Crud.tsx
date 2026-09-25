@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import CampoPassword from "@/components/CampoPassword";
 import MensajeError from "@/components/MensajeError";
 import { mensajeDe, pedir } from "@/lib/cliente";
 
@@ -136,12 +137,19 @@ export default function Crud<T extends Fila>({
                       </option>
                     ))}
                   </select>
+                ) : c.tipo === "password" ? (
+                  <CampoPassword
+                    valor={valores[c.clave] ?? ""}
+                    onCambio={(valor) => setValores((v) => ({ ...v, [c.clave]: valor }))}
+                    autoComplete="new-password"
+                    requerido={c.requerido}
+                    conGenerar
+                  />
                 ) : (
                   <input
                     className="campo"
-                    type={c.tipo === "numero" ? "number" : c.tipo === "email" ? "email" : c.tipo === "password" ? "password" : "text"}
+                    type={c.tipo === "numero" ? "number" : c.tipo === "email" ? "email" : "text"}
                     min={c.tipo === "numero" ? 0 : undefined}
-                    autoComplete={c.tipo === "password" ? "new-password" : undefined}
                     required={c.requerido}
                     value={valores[c.clave] ?? ""}
                     onChange={(e) => setValores((v) => ({ ...v, [c.clave]: e.target.value }))}

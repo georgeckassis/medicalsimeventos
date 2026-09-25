@@ -7,7 +7,9 @@ import type { ItemInventario } from "@/lib/db/types";
 
 export default function InventarioPage() {
   const { sesion } = useSesion();
-  const gestor = sesion?.usuario.rol === "general" || sesion?.usuario.rol === "superadmin";
+  const rol = sesion?.usuario.rol;
+  const gestor = rol === "general" || rol === "superadmin";
+  const logistica = gestor || rol === "logistica";
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <Encabezado
@@ -17,8 +19,8 @@ export default function InventarioPage() {
       {sesion && (
         <Crud<ItemInventario>
           endpoint="/api/inventario"
-          puedeCrear={gestor}
-          puedeEditar={gestor}
+          puedeCrear={logistica}
+          puedeEditar={logistica}
           puedeBorrar={gestor}
           textoNuevo="+ Agregar objeto"
           mensajeBorrar={(i) => `¿Eliminar "${i.nombre}"? Si ya se usó en algún evento, queda desactivado en vez de borrarse.`}

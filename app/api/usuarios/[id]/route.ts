@@ -13,9 +13,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (id === actual.id && !input.activo) {
       return NextResponse.json({ error: "No podés desactivar tu propio usuario." }, { status: 400 });
     }
-    if (input.rol === "representante" && !input.institucionId) {
-      return NextResponse.json({ error: "El representante tiene que tener una institución asignada." }, { status: 400 });
-    }
     const usuario = await actualizarUsuario(id, input, input.password);
     if (!usuario) return NextResponse.json({ error: "No encontrado." }, { status: 404 });
     return NextResponse.json(usuario);

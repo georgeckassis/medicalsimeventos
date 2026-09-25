@@ -37,13 +37,19 @@ export default function UsuariosPage() {
               clave: "institucionId",
               etiqueta: "Institución",
               tipo: "opciones",
-              opciones: [{ valor: "", etiqueta: "— Elegí —" }, ...instituciones.map((i) => ({ valor: String(i.id), etiqueta: i.nombre }))],
+              opciones: [{ valor: "", etiqueta: "— Ninguna —" }, ...instituciones.map((i) => ({ valor: String(i.id), etiqueta: i.nombre }))],
               visible: (v) => v.rol === "representante",
-              ayuda: "El representante solo ve los eventos de esta institución.",
+              ayuda: "Ve todos los eventos de esta institución. Si queda vacío, solo ve los eventos donde se lo asigne como representante a cargo.",
             },
             { clave: "telefono", etiqueta: "Teléfono / WhatsApp", ayuda: "Para los avisos por WhatsApp." },
             { clave: "dni", etiqueta: "DNI", ayuda: "Obligatorio para choferes (autorización de ingreso)." },
-            { clave: "password", etiqueta: "Contraseña", tipo: "password", ayuda: "Mínimo 8 caracteres. Al editar, dejala vacía para no cambiarla." },
+            {
+              clave: "password",
+              etiqueta: "Contraseña",
+              tipo: "password",
+              ayuda:
+                "Mínimo 8 caracteres. Copiala antes de guardar para pasársela a la persona: se guarda cifrada y después no se puede volver a ver. Al editar, dejala vacía para no cambiarla o poné una nueva para resetearla.",
+            },
             { clave: "activo", etiqueta: "Activo", tipo: "si_no" },
           ]}
           aValores={(u) => ({

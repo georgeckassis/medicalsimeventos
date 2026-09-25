@@ -14,13 +14,17 @@ proyecto separado, con su propia base de datos.
 | Rol | Qué hace |
 |---|---|
 | **Super admin** | Acceso total, solo para MedicalSim. No aparece en ningún listado. Se crea solo al arrancar (`SUPERADMIN_EMAIL`). |
-| **Encargado general** | Único que crea, edita o borra eventos, fechas y horarios de armado/desarmado; arma la lista de objetos desde el inventario; carga inventario, instituciones y usuarios; crea y asigna tareas; reabre etapas firmadas. |
-| **Encargado de logística** | Ve el calendario; carga horarios de carga en depósito, salida, retiro y devolución, más el chofer y el vehículo; tilda los objetos cargados y cierra cada etapa con firma y foto. |
+| **Encargado general** | Único que crea, edita o borra eventos, fechas y horarios de armado/desarmado; arma la lista de objetos desde el inventario; asigna el representante a cargo de cada evento; carga inventario, instituciones y usuarios; crea y asigna tareas; reabre etapas firmadas. |
+| **Encargado de logística** | Ve el calendario; carga y edita el inventario del depósito (no lo borra); carga horarios de carga en depósito, salida, retiro y devolución, más el chofer y el vehículo; tilda los objetos cargados y cierra cada etapa con firma y foto. |
 | **Chofer** | Ve el calendario y el checklist; tilda objetos y firma carga, descarga y devolución al depósito. |
-| **Representante** | Ve solo los eventos de su institución (checklist, horarios, alumnos) sin poder tocar nada, y firma una validación de que revisó el evento. |
+| **Representante** | Ve solo los eventos de su institución y los que tiene asignados a cargo (checklist, horarios, alumnos) sin poder tocar nada, y firma una validación de que revisó el evento. |
 
 Nadie más que el encargado general (o el super admin) puede borrar cosas.
 Los usuarios no se borran: se desactivan, para no perder quién tildó o firmó.
+
+Las contraseñas se guardan cifradas (hash): nadie, ni el super admin, puede
+verlas después de guardarlas. Al crear o resetear un usuario se puede ver lo
+que se escribe o generar una al azar y copiarla para pasársela a la persona.
 
 ## Cómo funciona un evento
 

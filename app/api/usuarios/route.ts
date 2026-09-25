@@ -28,9 +28,6 @@ export async function POST(req: NextRequest) {
     await requerirUsuario((u) => esGestor(u.rol));
     const input = await leerCuerpo(req, esquemaUsuario);
     if (!input.password) return NextResponse.json({ error: "La contraseña inicial es obligatoria." }, { status: 400 });
-    if (input.rol === "representante" && !input.institucionId) {
-      return NextResponse.json({ error: "El representante tiene que tener una institución asignada." }, { status: 400 });
-    }
     const usuario = await crearUsuario({ ...input, password: input.password });
     return NextResponse.json(usuario, { status: 201 });
   } catch (error) {

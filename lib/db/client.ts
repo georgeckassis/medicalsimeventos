@@ -258,6 +258,9 @@ async function crearTablas(sql: postgres.ISql): Promise<void> {
     )
   `;
 
+  // Representante a cargo del evento: lo ve aunque no sea de la institución.
+  await sql`ALTER TABLE eventos ADD COLUMN IF NOT EXISTS representante_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL`;
+
   await sql`CREATE INDEX IF NOT EXISTS eventos_inicio_idx ON eventos (inicio)`;
   await sql`CREATE INDEX IF NOT EXISTS historial_evento_idx ON historial (evento_id, creado_en DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS alertas_activas_idx ON alertas (resuelta_en, creada_en DESC)`;

@@ -55,6 +55,7 @@ export const esquemaEvento = z
     sede: textoOpcional,
     direccion: textoOpcional,
     institucionId: idOpcional,
+    representanteId: idOpcional,
     cantidadAlumnos: z.number().int().min(0).optional().default(0),
     instructores: textoOpcional,
     estado: z.enum(ESTADOS_EVENTO).optional().default("planificado"),

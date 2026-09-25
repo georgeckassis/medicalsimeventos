@@ -1,6 +1,6 @@
 import { after, NextRequest, NextResponse } from "next/server";
 import { idDeParams, leerCuerpo, requerirUsuario, respuestaError } from "@/lib/api";
-import { eventoVisible } from "@/lib/acceso";
+import { eventoVisible, validarRepresentante } from "@/lib/acceso";
 import { esGestor, puedeEditarLogistica, puedeTildar, puedeValidarComoRepresentante } from "@/lib/auth/permisos";
 import { revisarAlertasSiCorresponde } from "@/lib/alertas/motor";
 import { listarAlertas } from "@/lib/db/alertas";
@@ -50,6 +50,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     const usuario = await requerirUsuario((u) => esGestor(u.rol));
     const id = idDeParams((await params).id);
     const input = await leerCuerpo(req, esquemaEvento);
+    await validarRepresentante(input.representanteId);
     if (!(await actualizarEvento(id, input))) return NextResponse.json({ error: "No encontrado." }, { status: 404 });
     await registrarHistorial(id, usuario.id, "Editó los datos del evento");
     after(() => revisarAlertasSiCorresponde(true));

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import MensajeError from "@/components/MensajeError";
 import { mensajeDe, pedir } from "@/lib/cliente";
 import { isoALocal, localAIso } from "@/lib/fechas";
-import { ESTADOS_EVENTO, NOMBRE_ESTADO_EVENTO, type EstadoEvento, type Evento, type Institucion } from "@/lib/db/types";
+import { ESTADOS_EVENTO, NOMBRE_ESTADO_EVENTO, type EstadoEvento, type Evento, type Institucion, type Usuario } from "@/lib/db/types";
 
 interface Campos {
   nombre: string;
@@ -15,6 +15,7 @@ interface Campos {
   sede: string;
   direccion: string;
   institucionId: string;
+  representanteId: string;
   cantidadAlumnos: string;
   instructores: string;
   estado: EstadoEvento;
@@ -33,6 +34,7 @@ function desdeEvento(e?: Evento): Campos {
     sede: e?.sede ?? "",
     direccion: e?.direccion ?? "",
     institucionId: e?.institucionId ? String(e.institucionId) : "",
+    representanteId: e?.representanteId ? String(e.representanteId) : "",
     cantidadAlumnos: e ? String(e.cantidadAlumnos) : "",
     instructores: e?.instructores ?? "",
     estado: e?.estado ?? "planificado",
@@ -48,11 +50,15 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
   const router = useRouter();
   const [campos, setCampos] = useState<Campos>(desdeEvento(evento));
   const [instituciones, setInstituciones] = useState<Institucion[]>([]);
+  const [representantes, setRepresentantes] = useState<Usuario[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     pedir<Institucion[]>("/api/instituciones").then(setInstituciones).catch((e) => setError(mensajeDe(e)));
+    pedir<Usuario[]>("/api/usuarios?rol=representante")
+      .then((u) => setRepresentantes(u.filter((r) => r.activo)))
+      .catch((e) => setError(mensajeDe(e)));
   }, []);
 
   const set = (clave: keyof Campos) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
@@ -70,6 +76,7 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
         armadoEn: localAIso(campos.armadoEn),
         desarmadoEn: localAIso(campos.desarmadoEn),
         institucionId: campos.institucionId ? Number(campos.institucionId) : null,
+        representanteId: campos.representanteId ? Number(campos.representanteId) : null,
         cantidadAlumnos: Number(campos.cantidadAlumnos) || 0,
       };
       if (!cuerpo.inicio || !cuerpo.fin) throw new Error("Completá la fecha y hora de inicio y de fin.");
@@ -138,7 +145,20 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-zinc-500">El representante de esta institución va a ver el evento.</p>
+          <p className="mt-1 text-xs text-zinc-500">Los representantes de esta institución van a ver el evento.</p>
+        </div>
+        <div>
+          <label className="etiqueta">Representante a cargo</label>
+          <select className="campo" value={campos.representanteId} onChange={set("representanteId")}>
+            <option value="">— Sin asignar —</option>
+            {representantes.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.nombre}
+                {r.institucionNombre ? ` (${r.institucionNombre})` : ""}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-zinc-500">Puede ver el evento y validarlo aunque no sea de la institución. Se da de alta en Usuarios.</p>
         </div>
         <div>
           <label className="etiqueta">Sede</label>

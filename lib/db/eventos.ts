@@ -23,6 +23,7 @@ function mapResumen(row: any): EventoResumen {
     sede: row.sede,
     institucionId: row.institucion_id,
     institucionNombre: row.institucion_nombre ?? null,
+    representanteId: row.representante_id ?? null,
     cantidadAlumnos: Number(row.cantidad_alumnos),
     estado: row.estado,
     armadoEn: aIsoONull(row.armado_en),
@@ -43,6 +44,7 @@ function mapEvento(row: any): Evento {
     instructores: row.instructores,
     observaciones: row.observaciones,
     emailsNotificacion: row.emails_notificacion,
+    representanteNombre: row.representante_nombre ?? null,
     logisticaId: row.logistica_id,
     logisticaNombre: row.logistica_nombre ?? null,
     choferId: row.chofer_id,
@@ -57,17 +59,24 @@ function mapEvento(row: any): Evento {
   };
 }
 
-/** Eventos que se superponen con [desde, hasta). Si se pasa institucionId, solo los de esa institución (representante). */
-export async function listarEventos(filtro: { desde?: string; hasta?: string; institucionId?: number | null }): Promise<EventoResumen[]> {
+/**
+ * Eventos que se superponen con [desde, hasta). Si se pasa `representante`,
+ * solo los de su institución o los que tiene asignados a cargo.
+ */
+export async function listarEventos(filtro: {
+  desde?: string;
+  hasta?: string;
+  representante?: { id: number; institucionId: number | null };
+}): Promise<EventoResumen[]> {
   const sql = await db();
-  const soloInstitucion = filtro.institucionId !== undefined;
+  const rep = filtro.representante;
   const rows = await sql`
     SELECT e.*, i.nombre AS institucion_nombre,
       (SELECT count(*) FROM alertas a WHERE a.evento_id = e.id AND a.resuelta_en IS NULL) AS alertas_activas
     FROM eventos e LEFT JOIN instituciones i ON i.id = e.institucion_id
     WHERE (${filtro.hasta ?? null}::timestamptz IS NULL OR e.inicio < ${filtro.hasta ?? null})
       AND (${filtro.desde ?? null}::timestamptz IS NULL OR e.fin >= ${filtro.desde ?? null})
-      AND (${!soloInstitucion} OR e.institucion_id = ${filtro.institucionId ?? -1})
+      AND (${!rep} OR e.institucion_id = ${rep?.institucionId ?? -1} OR e.representante_id = ${rep?.id ?? -1})
     ORDER BY e.inicio ASC
   `;
   return rows.map(mapResumen);
@@ -77,7 +86,7 @@ export async function obtenerEvento(id: number): Promise<Evento | null> {
   const sql = await db();
   const rows = await sql`
     SELECT e.*, i.nombre AS institucion_nombre,
-      l.nombre AS logistica_nombre,
+      l.nombre AS logistica_nombre, r.nombre AS representante_nombre,
       c.nombre AS chofer_nombre, c.dni AS chofer_dni, c.telefono AS chofer_telefono,
       v.patente AS vehiculo_patente, v.marca AS vehiculo_marca, v.modelo AS vehiculo_modelo,
       (SELECT count(*) FROM alertas a WHERE a.evento_id = e.id AND a.resuelta_en IS NULL) AS alertas_activas,
@@ -85,6 +94,7 @@ export async function obtenerEvento(id: number): Promise<Evento | null> {
     FROM eventos e
     LEFT JOIN instituciones i ON i.id = e.institucion_id
     LEFT JOIN usuarios l ON l.id = e.logistica_id
+    LEFT JOIN usuarios r ON r.id = e.representante_id
     LEFT JOIN usuarios c ON c.id = e.chofer_id
     LEFT JOIN vehiculos v ON v.id = e.vehiculo_id
     WHERE e.id = ${id}
@@ -120,6 +130,7 @@ export interface EventoInput {
   sede: string;
   direccion: string;
   institucionId: number | null;
+  representanteId: number | null;
   cantidadAlumnos: number;
   instructores: string;
   estado: EstadoEvento;
@@ -132,10 +143,10 @@ export interface EventoInput {
 export async function crearEvento(input: EventoInput, usuarioId: number): Promise<number> {
   const sql = await db();
   const rows = await sql`
-    INSERT INTO eventos (nombre, tipo_capacitacion, inicio, fin, sede, direccion, institucion_id, cantidad_alumnos,
+    INSERT INTO eventos (nombre, tipo_capacitacion, inicio, fin, sede, direccion, institucion_id, representante_id, cantidad_alumnos,
       instructores, estado, observaciones, armado_en, desarmado_en, emails_notificacion, token_inscripcion, creado_por)
     VALUES (${input.nombre}, ${input.tipoCapacitacion}, ${input.inicio}, ${input.fin}, ${input.sede}, ${input.direccion},
-      ${input.institucionId}, ${input.cantidadAlumnos}, ${input.instructores}, ${input.estado}, ${input.observaciones},
+      ${input.institucionId}, ${input.representanteId}, ${input.cantidadAlumnos}, ${input.instructores}, ${input.estado}, ${input.observaciones},
       ${input.armadoEn}, ${input.desarmadoEn}, ${input.emailsNotificacion}, ${randomBytes(12).toString("base64url")}, ${usuarioId})
     RETURNING id
   `;
@@ -148,6 +159,7 @@ export async function actualizarEvento(id: number, input: EventoInput): Promise<
     UPDATE eventos SET
       nombre = ${input.nombre}, tipo_capacitacion = ${input.tipoCapacitacion}, inicio = ${input.inicio}, fin = ${input.fin},
       sede = ${input.sede}, direccion = ${input.direccion}, institucion_id = ${input.institucionId},
+      representante_id = ${input.representanteId},
       cantidad_alumnos = ${input.cantidadAlumnos}, instructores = ${input.instructores}, estado = ${input.estado},
       observaciones = ${input.observaciones}, armado_en = ${input.armadoEn}, desarmado_en = ${input.desarmadoEn},
       emails_notificacion = ${input.emailsNotificacion}, actualizado_en = now()
