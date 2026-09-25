@@ -4,6 +4,20 @@ import { hashPassword } from "@/lib/auth/password";
 let cachedSql: postgres.Sql | null = null;
 let schemaReady: Promise<void> | null = null;
 
+/**
+ * Al conectar la base desde Vercel → Storage se puede elegir un prefijo, y
+ * las variables quedan como STORAGE_DATABASE_URL, NEON_POSTGRES_URL, etc.
+ * Se aceptan igual, para no depender de lo que se haya puesto ahí.
+ */
+function conPrefijo(): string | undefined {
+  const claves = Object.keys(process.env);
+  for (const sufijo of ["_DATABASE_URL", "_POSTGRES_URL"]) {
+    const clave = claves.find((c) => c.endsWith(sufijo) && process.env[c]);
+    if (clave) return process.env[clave];
+  }
+  return undefined;
+}
+
 function getConnectionString(): string {
   // La integración de Vercel con Neon expone varias variables equivalentes;
   // probamos las más comunes en orden.
@@ -11,7 +25,8 @@ function getConnectionString(): string {
     process.env.DATABASE_URL ||
     process.env.POSTGRES_URL ||
     process.env.POSTGRES_URL_NON_POOLING ||
-    process.env.DATABASE_URL_UNPOOLED;
+    process.env.DATABASE_URL_UNPOOLED ||
+    conPrefijo();
 
   if (!value) {
     throw new Error(
