@@ -24,6 +24,7 @@ function mapResumen(row: any): EventoResumen {
     institucionId: row.institucion_id,
     institucionNombre: row.institucion_nombre ?? null,
     representanteId: row.representante_id ?? null,
+    institucionRepresentanteId: row.institucion_representante_id ?? null,
     cantidadAlumnos: Number(row.cantidad_alumnos),
     estado: row.estado,
     armadoEn: aIsoONull(row.armado_en),
@@ -60,23 +61,19 @@ function mapEvento(row: any): Evento {
 }
 
 /**
- * Eventos que se superponen con [desde, hasta). Si se pasa `representante`,
- * solo los de su institución o los que tiene asignados a cargo.
+ * Eventos que se superponen con [desde, hasta). Si se pasa `representanteId`,
+ * solo los que tiene a cargo o los de las instituciones que atiende.
  */
-export async function listarEventos(filtro: {
-  desde?: string;
-  hasta?: string;
-  representante?: { id: number; institucionId: number | null };
-}): Promise<EventoResumen[]> {
+export async function listarEventos(filtro: { desde?: string; hasta?: string; representanteId?: number }): Promise<EventoResumen[]> {
   const sql = await db();
-  const rep = filtro.representante;
+  const rep = filtro.representanteId ?? null;
   const rows = await sql`
-    SELECT e.*, i.nombre AS institucion_nombre,
+    SELECT e.*, i.nombre AS institucion_nombre, i.representante_id AS institucion_representante_id,
       (SELECT count(*) FROM alertas a WHERE a.evento_id = e.id AND a.resuelta_en IS NULL) AS alertas_activas
     FROM eventos e LEFT JOIN instituciones i ON i.id = e.institucion_id
     WHERE (${filtro.hasta ?? null}::timestamptz IS NULL OR e.inicio < ${filtro.hasta ?? null})
       AND (${filtro.desde ?? null}::timestamptz IS NULL OR e.fin >= ${filtro.desde ?? null})
-      AND (${!rep} OR e.institucion_id = ${rep?.institucionId ?? -1} OR e.representante_id = ${rep?.id ?? -1})
+      AND (${rep}::int IS NULL OR e.representante_id = ${rep} OR i.representante_id = ${rep})
     ORDER BY e.inicio ASC
   `;
   return rows.map(mapResumen);
@@ -85,7 +82,7 @@ export async function listarEventos(filtro: {
 export async function obtenerEvento(id: number): Promise<Evento | null> {
   const sql = await db();
   const rows = await sql`
-    SELECT e.*, i.nombre AS institucion_nombre,
+    SELECT e.*, i.nombre AS institucion_nombre, i.representante_id AS institucion_representante_id,
       l.nombre AS logistica_nombre, r.nombre AS representante_nombre,
       c.nombre AS chofer_nombre, c.dni AS chofer_dni, c.telefono AS chofer_telefono,
       v.patente AS vehiculo_patente, v.marca AS vehiculo_marca, v.modelo AS vehiculo_modelo,

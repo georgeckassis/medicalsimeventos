@@ -8,7 +8,7 @@ export const NOMBRE_ROL: Record<Rol, string> = {
   general: "Encargado general",
   logistica: "Encargado de logística",
   chofer: "Chofer",
-  representante: "Representante",
+  representante: "Representante de ventas",
 };
 
 export const ESTADOS_EVENTO = ["planificado", "confirmado", "en_curso", "finalizado", "cancelado"] as const;
@@ -58,6 +58,9 @@ export interface Institucion {
   contacto: string;
   telefono: string;
   email: string;
+  /** Representante de ventas de MedicalSim que atiende esta institución. */
+  representanteId: number | null;
+  representanteNombre: string | null;
 }
 
 export interface Vehiculo {
@@ -87,8 +90,10 @@ export interface EventoResumen {
   sede: string;
   institucionId: number | null;
   institucionNombre: string | null;
-  /** Representante asignado a cargo del evento (además de los de la institución). */
+  /** Representante de ventas a cargo del evento (junto al instructor). */
   representanteId: number | null;
+  /** Representante de ventas que atiende la institución del evento. */
+  institucionRepresentanteId: number | null;
   cantidadAlumnos: number;
   estado: EstadoEvento;
   armadoEn: string | null;

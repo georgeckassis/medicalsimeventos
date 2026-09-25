@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const eventos = await listarEventos({
       desde: fecha("desde"),
       hasta: fecha("hasta"),
-      ...(usuario.rol === "representante" ? { representante: { id: usuario.id, institucionId: usuario.institucionId } } : {}),
+      ...(usuario.rol === "representante" ? { representanteId: usuario.id } : {}),
     });
     return NextResponse.json(eventos);
   } catch (error) {

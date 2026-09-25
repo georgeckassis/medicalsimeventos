@@ -137,7 +137,19 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
         <h2 className="font-bold sm:col-span-2">Lugar</h2>
         <div>
           <label className="etiqueta">Institución / cliente</label>
-          <select className="campo" value={campos.institucionId} onChange={set("institucionId")}>
+          <select
+            className="campo"
+            value={campos.institucionId}
+            onChange={(e) => {
+              const institucion = instituciones.find((i) => String(i.id) === e.target.value);
+              // Se propone el representante que atiende esa institución (se puede cambiar).
+              setCampos((c) => ({
+                ...c,
+                institucionId: e.target.value,
+                representanteId: institucion?.representanteId ? String(institucion.representanteId) : c.representanteId,
+              }));
+            }}
+          >
             <option value="">— Sin institución —</option>
             {instituciones.map((i) => (
               <option key={i.id} value={i.id}>
@@ -145,20 +157,20 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-zinc-500">Los representantes de esta institución van a ver el evento.</p>
         </div>
         <div>
-          <label className="etiqueta">Representante a cargo</label>
+          <label className="etiqueta">Representante de ventas a cargo</label>
           <select className="campo" value={campos.representanteId} onChange={set("representanteId")}>
             <option value="">— Sin asignar —</option>
             {representantes.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.nombre}
-                {r.institucionNombre ? ` (${r.institucionNombre})` : ""}
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-zinc-500">Puede ver el evento y validarlo aunque no sea de la institución. Se da de alta en Usuarios.</p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Vendedor de MedicalSim a cargo del evento junto al instructor. Se completa con el que atiende la institución.
+          </p>
         </div>
         <div>
           <label className="etiqueta">Sede</label>

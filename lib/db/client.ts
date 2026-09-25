@@ -258,8 +258,17 @@ async function crearTablas(sql: postgres.ISql): Promise<void> {
     )
   `;
 
-  // Representante a cargo del evento: lo ve aunque no sea de la institución.
+  // Representante de ventas de MedicalSim: el que atiende la cuenta de cada
+  // institución, y el que queda a cargo de cada evento (junto al instructor).
   await sql`ALTER TABLE eventos ADD COLUMN IF NOT EXISTS representante_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL`;
+  await sql`ALTER TABLE instituciones ADD COLUMN IF NOT EXISTS representante_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL`;
+  // Antes el representante se asociaba a una institución desde su usuario;
+  // se pasa esa relación a la institución (una sola vez, si está vacía).
+  await sql`
+    UPDATE instituciones i SET representante_id = u.id
+    FROM usuarios u
+    WHERE u.institucion_id = i.id AND u.rol = 'representante' AND i.representante_id IS NULL
+  `;
 
   await sql`CREATE INDEX IF NOT EXISTS eventos_inicio_idx ON eventos (inicio)`;
   await sql`CREATE INDEX IF NOT EXISTS historial_evento_idx ON historial (evento_id, creado_en DESC)`;

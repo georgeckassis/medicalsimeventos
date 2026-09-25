@@ -23,6 +23,7 @@ export const esquemaInstitucion = z.object({
   contacto: textoOpcional,
   telefono: textoOpcional,
   email: textoOpcional,
+  representanteId: z.number().int().positive().nullable().optional().default(null),
 });
 export const UNICIDAD_INSTITUCION = { instituciones_nombre_key: "Ya existe una institución con ese nombre." };
 

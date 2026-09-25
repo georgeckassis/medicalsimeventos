@@ -4,13 +4,15 @@ import { obtenerUsuario } from "@/lib/db/usuarios";
 import type { Evento, Usuario } from "@/lib/db/types";
 
 /**
- * El representante ve los eventos de su institución y los que tiene
- * asignados a cargo; el resto de los roles ve todos.
+ * El representante de ventas ve los eventos que tiene a cargo y los de las
+ * instituciones que atiende; el resto de los roles ve todos.
  */
-export function puedeVerEvento(usuario: Usuario, evento: { institucionId: number | null; representanteId: number | null }): boolean {
+export function puedeVerEvento(
+  usuario: Usuario,
+  evento: { representanteId: number | null; institucionRepresentanteId: number | null },
+): boolean {
   if (usuario.rol !== "representante") return true;
-  if (evento.representanteId === usuario.id) return true;
-  return usuario.institucionId !== null && evento.institucionId === usuario.institucionId;
+  return evento.representanteId === usuario.id || evento.institucionRepresentanteId === usuario.id;
 }
 
 export async function eventoVisible(usuario: Usuario, eventoId: number): Promise<Evento> {
