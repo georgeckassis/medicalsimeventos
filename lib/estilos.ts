@@ -14,3 +14,12 @@ export const COLOR_ESTADO_TAREA: Record<EstadoTarea, string> = {
   completada: "bg-emerald-100 text-emerald-800",
   bloqueada: "bg-red-100 text-red-700",
 };
+
+/** Punto de color por estado (vista mensual en el celular, donde no entra el nombre). */
+export const PUNTO_ESTADO: Record<EstadoEvento, string> = {
+  planificado: "bg-zinc-400",
+  confirmado: "bg-sky-500",
+  en_curso: "bg-emerald-500",
+  finalizado: "bg-zinc-300",
+  cancelado: "bg-red-300",
+};

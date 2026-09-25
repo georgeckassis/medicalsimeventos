@@ -6,9 +6,9 @@ import Encabezado from "@/components/Encabezado";
 import MensajeError from "@/components/MensajeError";
 import { useSesion } from "@/components/Sesion";
 import { mensajeDe, pedir } from "@/lib/cliente";
-import { diaLocal, formatoFecha, formatoHora, isoALocal, localAIso } from "@/lib/fechas";
+import { diaLocal, formatoFecha, formatoFechaHora, formatoHora, isoALocal, localAIso } from "@/lib/fechas";
 import { NOMBRE_ESTADO_EVENTO, type EventoResumen } from "@/lib/db/types";
-import { COLOR_ESTADO } from "@/lib/estilos";
+import { COLOR_ESTADO, PUNTO_ESTADO } from "@/lib/estilos";
 
 type Vista = "mes" | "semana" | "lista";
 
@@ -47,6 +47,9 @@ export default function CalendarioPage() {
   const { sesion } = useSesion();
   const [vista, setVista] = useState<Vista>("mes");
   const [referencia, setReferencia] = useState(hoy());
+  // Día tocado en la vista mensual: sus eventos se listan debajo de la grilla
+  // (en el celular las celdas son muy chicas para leer los nombres).
+  const [diaElegido, setDiaElegido] = useState(hoy());
   const [eventos, setEventos] = useState<EventoResumen[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -161,12 +164,26 @@ export default function CalendarioPage() {
               return (
                 <div
                   key={dia}
-                  className={`min-h-24 border-r border-b border-zinc-100 p-1 sm:min-h-28 dark:border-zinc-800 ${delMes ? "" : "bg-zinc-50/60 text-zinc-400 dark:bg-zinc-900/40"}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setDiaElegido(dia)}
+                  onKeyDown={(ev) => ev.key === "Enter" && setDiaElegido(dia)}
+                  className={`min-h-14 cursor-pointer border-r border-b border-zinc-100 p-1 sm:min-h-28 dark:border-zinc-800 ${
+                    delMes ? "" : "bg-zinc-50/60 text-zinc-400 dark:bg-zinc-900/40"
+                  } ${dia === diaElegido ? "bg-brand-cyan/10 ring-2 ring-brand-cyan/50 ring-inset" : ""}`}
                 >
                   <div className={`mb-1 text-right text-xs font-semibold ${dia === hoy() ? "text-brand-navy" : ""}`}>
                     {dia === hoy() ? <span className="rounded-full bg-brand-navy px-1.5 py-0.5 text-white">{Number(dia.slice(8))}</span> : Number(dia.slice(8))}
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-wrap justify-end gap-1 sm:hidden">
+                    {eventosDelDia(dia).map((e) => (
+                      <span
+                        key={e.id}
+                        className={`h-2 w-2 rounded-full ${e.alertasActivas > 0 ? "bg-red-600" : PUNTO_ESTADO[e.estado]}`}
+                      />
+                    ))}
+                  </div>
+                  <div className="hidden flex-col gap-1 sm:flex">
                     {eventosDelDia(dia).map((e) => (
                       <Link
                         key={e.id}
@@ -185,6 +202,41 @@ export default function CalendarioPage() {
             })}
           </div>
         </div>
+      )}
+
+      {vista === "mes" && (
+        <section className="mt-4">
+          <h2 className="mb-2 text-sm font-bold text-zinc-600 dark:text-zinc-300">
+            {formatoFecha(localAIso(`${diaElegido}T12:00`))}
+            <span className="font-normal text-zinc-400"> · tocá un día para ver sus eventos</span>
+          </h2>
+          {eventosDelDia(diaElegido).length === 0 ? (
+            <p className="text-sm text-zinc-400">No hay eventos ese día.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {eventosDelDia(diaElegido).map((e) => (
+                <Link key={e.id} href={`/eventos/${e.id}`} className="tarjeta block p-3 text-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-semibold">
+                      {e.alertasActivas > 0 && <span className="mr-1 text-red-600">●</span>}
+                      {e.nombre}
+                    </span>
+                    <span className={`rounded border px-1.5 py-0.5 text-xs ${COLOR_ESTADO[e.estado]}`}>{NOMBRE_ESTADO_EVENTO[e.estado]}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    {formatoHora(e.inicio)} a {formatoHora(e.fin)}
+                    {e.institucionNombre && ` · ${e.institucionNombre}`}
+                    {e.sede && ` · ${e.sede}`}
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                    Carga: {e.cargaDepositoEn ? formatoFechaHora(e.cargaDepositoEn) : <span className="text-amber-600">sin definir</span>} ·
+                    Armado: {e.armadoEn ? formatoFechaHora(e.armadoEn) : "—"}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       {vista === "semana" && (
