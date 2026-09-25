@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  /* Manual de marca MedicalSim — ver lib/context/brand.ts */
+  --brand-navy: #2f71b8;
+  --brand-navy-dark: #24578f;
+  --brand-cyan: #14bbe7;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-navy-dark: var(--brand-navy-dark);
+  --color-brand-cyan: var(--brand-cyan);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+/* Estilo compartido para inputs/selects/textareas de los formularios del
+   panel — reemplaza los bloques .campo-* que antes se repetían idénticos
+   en cada página. */
+.campo {
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid rgb(212 212 216);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: transparent;
+  transition: border-color 0.15s ease;
+}
+.campo:focus {
+  outline: none;
+  border-color: var(--brand-navy);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-navy) 25%, transparent);
+}
+@media (prefers-color-scheme: dark) {
+  .campo {
+    border-color: rgb(63 63 70);
+  }
+}
+
+/* Tarjeta compartida: reemplaza el borde fino plano por el estilo con
+   sombra suave y esquinas más redondeadas que usan los paneles nuevos. */
+.tarjeta {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+}
+a.tarjeta,
+.tarjeta-interactiva {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+a.tarjeta:hover,
+.tarjeta-interactiva:hover {
+  border-color: var(--brand-navy);
+  box-shadow: 0 4px 14px rgba(47, 113, 184, 0.12);
+}
+@media (prefers-color-scheme: dark) {
+  .tarjeta {
+    background: rgb(24 24 27);
+    border-color: rgb(63 63 70);
+  }
+}
+
+/* Botones compartidos del panel de eventos. */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.375rem;
+  background: var(--brand-navy);
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+.boton:hover {
+  background: var(--brand-navy-dark);
+}
+.boton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.boton-secundario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--brand-navy);
+  color: var(--brand-navy);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: transparent;
+}
+.boton-secundario:hover {
+  background: color-mix(in srgb, var(--brand-cyan) 12%, transparent);
+}
+.boton-secundario:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.boton-peligro {
+  border-radius: 0.375rem;
+  border: 1px solid rgb(248 113 113);
+  color: rgb(185 28 28);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.boton-peligro:hover {
+  background: rgb(254 242 242);
+}
+.etiqueta {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(82 82 91);
+}
+@media (prefers-color-scheme: dark) {
+  .etiqueta {
+    color: rgb(161 161 170);
+  }
+  .boton-secundario {
+    border-color: var(--brand-cyan);
+    color: var(--brand-cyan);
+  }
+}
