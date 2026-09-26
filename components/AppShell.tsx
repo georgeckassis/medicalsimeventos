@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ProveedorSesion, useSesion } from "@/components/Sesion";
 import { NOMBRE_ROL, type Rol } from "@/lib/db/types";
+import { reportar } from "@/lib/diagnostico";
 import {
+  IconActivity,
   IconBell,
   IconBox,
   IconBuilding,
@@ -36,6 +38,7 @@ const NAV: Array<{ href: string; label: string; icon: Icono; roles?: Rol[] }> = 
   { href: "/instituciones", label: "Instituciones", icon: IconBuilding, roles: GESTORES },
   { href: "/usuarios", label: "Usuarios", icon: IconUsers, roles: GESTORES },
   { href: "/configuracion", label: "Configuración", icon: IconSettings, roles: GESTORES },
+  { href: "/diagnostico", label: "Diagnóstico", icon: IconActivity, roles: GESTORES },
   { href: "/cuenta", label: "Mi cuenta", icon: IconUser },
 ];
 
@@ -161,6 +164,24 @@ function esPublica(pathname: string) {
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const publica = esPublica(pathname);
+
+  useEffect(() => {
+    // Marca que la app cargó bien (ver el aviso de app/layout.tsx para
+    // navegadores donde no llega a arrancar).
+    document.documentElement.setAttribute("data-hidratado", "1");
+    document.getElementById("aviso-no-cargo")?.remove();
+    if (publica) return;
+    // Cualquier error de la pantalla queda en el registro de Diagnóstico.
+    const alError = (e: ErrorEvent) => reportar("error_navegador", e.message || "Error", `${e.filename}:${e.lineno}:${e.colno}`);
+    const alRechazo = (e: PromiseRejectionEvent) =>
+      reportar("error_navegador", e.reason instanceof Error ? e.reason.message : String(e.reason), e.reason?.stack ?? "");
+    window.addEventListener("error", alError);
+    window.addEventListener("unhandledrejection", alRechazo);
+    return () => {
+      window.removeEventListener("error", alError);
+      window.removeEventListener("unhandledrejection", alRechazo);
+    };
+  }, [publica]);
   return (
     <ProveedorSesion activo={!publica}>{publica ? <>{children}</> : <Marco>{children}</Marco>}</ProveedorSesion>
   );

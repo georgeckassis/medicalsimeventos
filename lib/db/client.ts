@@ -284,6 +284,21 @@ async function crearTablas(sql: postgres.ISql): Promise<void> {
     await sql`ALTER TABLE eventos DROP COLUMN IF EXISTS representante_id`;
   }
 
+  // Registro de diagnóstico: errores del servidor y del navegador, e intentos
+  // de guardado, para poder ver qué pasó cuando algo "no anda".
+  await sql`
+    CREATE TABLE IF NOT EXISTS diagnostico (
+      id SERIAL PRIMARY KEY,
+      creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+      tipo TEXT NOT NULL,
+      mensaje TEXT NOT NULL,
+      detalle TEXT NOT NULL DEFAULT '',
+      ruta TEXT NOT NULL DEFAULT '',
+      navegador TEXT NOT NULL DEFAULT '',
+      usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL
+    )
+  `;
+
   await sql`CREATE INDEX IF NOT EXISTS eventos_inicio_idx ON eventos (inicio)`;
   await sql`CREATE INDEX IF NOT EXISTS historial_evento_idx ON historial (evento_id, creado_en DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS alertas_activas_idx ON alertas (resuelta_en, creada_en DESC)`;

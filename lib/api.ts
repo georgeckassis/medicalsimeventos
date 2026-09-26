@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 import { COOKIE_SESION, leerTokenSesion } from "@/lib/auth/sesion";
 import { esViolacionUnicidad, mensajeError } from "@/lib/db/errores";
+import { registrarDiagnostico } from "@/lib/db/diagnostico";
 import { obtenerUsuario } from "@/lib/db/usuarios";
 import type { Usuario } from "@/lib/db/types";
 
@@ -54,11 +55,21 @@ export function idDeParams(valor: string): number {
 }
 
 export function respuestaError(error: unknown, contexto: string, mensajesUnicidad: Record<string, string> = {}) {
-  if (error instanceof ErrorApi) return NextResponse.json({ error: error.message }, { status: error.status });
+  if (error instanceof ErrorApi) {
+    // Los rechazos esperables (datos inválidos, sin permiso…) también quedan en
+    // el diagnóstico: sirven para entender por qué "no se guardó". La sesión
+    // vencida (401) no, porque es lo normal al pasar un rato sin usar la app.
+    if (error.status !== 401) {
+      after(() => registrarDiagnostico({ tipo: `rechazo_${error.status}`, mensaje: error.message, ruta: contexto }));
+    }
+    return NextResponse.json({ error: error.message }, { status: error.status });
+  }
   for (const [constraint, mensaje] of Object.entries(mensajesUnicidad)) {
     if (esViolacionUnicidad(error, constraint)) return NextResponse.json({ error: mensaje }, { status: 409 });
   }
   console.error(`Error ${contexto}:`, error);
+  const detalle = error instanceof Error ? `${error.name}: ${error.message}\n${error.stack ?? ""}` : String(error);
+  after(() => registrarDiagnostico({ tipo: "error_servidor", mensaje: mensajeError(error), detalle, ruta: contexto }));
   return NextResponse.json({ error: mensajeError(error) }, { status: 500 });
 }
 

@@ -85,6 +85,17 @@ pendiente; el encargado general puede darlas por atendidas.
 
   (El plan Hobby solo permite crons diarios, por eso no viene incluido.)
 
+## Diagnóstico
+
+La pantalla **Diagnóstico** (encargado general y super admin) muestra los
+errores del servidor y del navegador, los rechazos (datos inválidos, sin
+permiso) y cada intento de guardar un evento, con usuario y navegador, de los
+últimos 30 días. El botón **Probar guardado** hace una prueba completa contra
+la base (crea un evento de prueba y lo deshace) y dice en qué paso falla.
+
+Si un navegador es demasiado viejo para la app, a los 10 segundos aparece un
+aviso rojo abajo explicando que no terminó de cargar.
+
 ## Stack
 
 - Next.js 16 (App Router, TypeScript), API y pantallas en el mismo proyecto.

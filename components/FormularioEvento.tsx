@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import CampoFechaHora from "@/components/CampoFechaHora";
 import MensajeError from "@/components/MensajeError";
 import { mensajeDe, pedir } from "@/lib/cliente";
+import { reportar } from "@/lib/diagnostico";
 import { isoALocal, localAIso } from "@/lib/fechas";
 import { ESTADOS_EVENTO, NOMBRE_ESTADO_EVENTO, type EstadoEvento, type Evento, type Institucion, type Usuario } from "@/lib/db/types";
 
@@ -61,6 +62,7 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
 
   function mostrarError(mensaje: string) {
     setError(mensaje);
+    reportar("guardado_evento", `No se guardó: ${mensaje}`, `inicio=${campos.inicio} fin=${campos.fin}`);
     // En el celular el mensaje puede quedar fuera de pantalla: se lo acerca.
     setTimeout(() => errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
   }
@@ -89,6 +91,7 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
+    reportar("guardado_evento", evento ? "Intento de guardar cambios" : "Intento de crear evento", `inicio=${campos.inicio} fin=${campos.fin}`);
     // Validación propia (form noValidate) para que el aviso se vea siempre,
     // en vez del globito del navegador que en el celular pasa desapercibido.
     if (!campos.nombre.trim()) return mostrarError("Falta el nombre del curso.");

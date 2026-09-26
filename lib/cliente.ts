@@ -1,10 +1,22 @@
+import { reportar } from "@/lib/diagnostico";
+
 /** fetch contra la propia API: devuelve el JSON o tira un Error con el mensaje que mandó el servidor. */
 export async function pedir<T = unknown>(url: string, opciones: { method?: string; body?: unknown } = {}): Promise<T> {
-  const res = await fetch(url, {
-    method: opciones.method ?? "GET",
-    headers: opciones.body !== undefined ? { "Content-Type": "application/json" } : undefined,
-    body: opciones.body !== undefined ? JSON.stringify(opciones.body) : undefined,
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: opciones.method ?? "GET",
+      headers: opciones.body !== undefined ? { "Content-Type": "application/json" } : undefined,
+      body: opciones.body !== undefined ? JSON.stringify(opciones.body) : undefined,
+    });
+  } catch (error) {
+    // Las lecturas (GET) se cortan solas al cambiar de pantalla; solo se
+    // registran los fallos al guardar, que son los que importan.
+    if (opciones.method && opciones.method !== "GET") {
+      reportar("error_conexion", `${opciones.method} ${url}`, error instanceof Error ? error.message : String(error));
+    }
+    throw new Error("No se pudo conectar con el servidor. Revisá la conexión a internet y probá de nuevo.");
+  }
   if (res.status === 401 && typeof window !== "undefined" && !url.startsWith("/api/login")) {
     // Recarga completa a propósito: la sesión venció y hay que descartar todo el estado de la pantalla.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
