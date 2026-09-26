@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import CampoFechaHora from "@/components/CampoFechaHora";
 import MensajeError from "@/components/MensajeError";
 import { mensajeDe, pedir } from "@/lib/cliente";
 import { formatoFechaHora, isoALocal, localAIso } from "@/lib/fechas";
@@ -154,19 +155,19 @@ export default function PanelLogistica({ detalle, onCambio }: { detalle: Detalle
         <div />
         <div>
           <label className="etiqueta">Carga de mercadería en depósito</label>
-          <input className="campo" type="datetime-local" value={campos.cargaDepositoEn} onChange={set("cargaDepositoEn")} />
+          <CampoFechaHora valor={campos.cargaDepositoEn} onCambio={(v) => setCampos((c) => ({ ...c, cargaDepositoEn: v }))} horaPorDefecto="07:00" opcional />
         </div>
         <div>
           <label className="etiqueta">Salida al evento</label>
-          <input className="campo" type="datetime-local" value={campos.salidaEn} onChange={set("salidaEn")} />
+          <CampoFechaHora valor={campos.salidaEn} onCambio={(v) => setCampos((c) => ({ ...c, salidaEn: v }))} horaPorDefecto="08:00" opcional />
         </div>
         <div>
           <label className="etiqueta">Retiro de las cosas de la sede</label>
-          <input className="campo" type="datetime-local" value={campos.retiroEn} onChange={set("retiroEn")} />
+          <CampoFechaHora valor={campos.retiroEn} onCambio={(v) => setCampos((c) => ({ ...c, retiroEn: v }))} horaPorDefecto="18:00" opcional />
         </div>
         <div>
           <label className="etiqueta">Devolución al depósito</label>
-          <input className="campo" type="datetime-local" value={campos.devolucionEn} onChange={set("devolucionEn")} />
+          <CampoFechaHora valor={campos.devolucionEn} onCambio={(v) => setCampos((c) => ({ ...c, devolucionEn: v }))} horaPorDefecto="20:00" opcional />
         </div>
         <div>
           <label className="etiqueta">Chofer</label>

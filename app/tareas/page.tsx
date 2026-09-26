@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Encabezado from "@/components/Encabezado";
+import CampoFechaHora from "@/components/CampoFechaHora";
 import MensajeError from "@/components/MensajeError";
 import { useSesion } from "@/components/Sesion";
 import { useAhora } from "@/lib/useAhora";
@@ -155,7 +156,7 @@ export default function TareasPage() {
           </div>
           <div>
             <label className="etiqueta">Vence</label>
-            <input className="campo" type="datetime-local" value={campos.venceEn} onChange={set("venceEn")} />
+            <CampoFechaHora valor={campos.venceEn} onCambio={(venceEn) => setCampos((c) => ({ ...c, venceEn }))} horaPorDefecto="18:00" opcional />
           </div>
           <div>
             <label className="etiqueta">Evento (opcional)</label>

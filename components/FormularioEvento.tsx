@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import CampoFechaHora from "@/components/CampoFechaHora";
 import MensajeError from "@/components/MensajeError";
 import { mensajeDe, pedir } from "@/lib/cliente";
 import { isoALocal, localAIso } from "@/lib/fechas";
@@ -56,6 +57,22 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
   const [vendedores, setVendedores] = useState<Usuario[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const errorRef = useRef<HTMLDivElement | null>(null);
+
+  function mostrarError(mensaje: string) {
+    setError(mensaje);
+    // En el celular el mensaje puede quedar fuera de pantalla: se lo acerca.
+    setTimeout(() => errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+  }
+
+  /** Al elegir el inicio, el fin se completa solo el mismo día (si estaba vacío o quedaba antes del inicio). */
+  function cambiarInicio(inicio: string) {
+    setCampos((c) => {
+      const finPropuesto = inicio ? `${inicio.slice(0, 10)}T${inicio.slice(11) < "18:00" ? "18:00" : inicio.slice(11)}` : "";
+      const fin = !c.fin || (inicio && c.fin < inicio) ? finPropuesto : c.fin;
+      return { ...c, inicio, fin };
+    });
+  }
 
   useEffect(() => {
     pedir<Institucion[]>("/api/instituciones").then(setInstituciones).catch((e) => setError(mensajeDe(e)));
@@ -72,6 +89,12 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
 
   async function guardar(e: React.FormEvent) {
     e.preventDefault();
+    // Validación propia (form noValidate) para que el aviso se vea siempre,
+    // en vez del globito del navegador que en el celular pasa desapercibido.
+    if (!campos.nombre.trim()) return mostrarError("Falta el nombre del curso.");
+    if (!campos.inicio) return mostrarError("Falta el día de inicio del curso.");
+    if (!campos.fin) return mostrarError("Falta el día de fin del curso.");
+    if (campos.fin < campos.inicio) return mostrarError("El fin no puede ser anterior al inicio.");
     setGuardando(true);
     setError(null);
     try {
@@ -95,13 +118,13 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
         router.push(`/eventos/${id}?tab=objetos`);
       }
     } catch (err) {
-      setError(mensajeDe(err));
+      mostrarError(mensajeDe(err));
       setGuardando(false);
     }
   }
 
   return (
-    <form onSubmit={guardar} className="flex flex-col gap-5">
+    <form onSubmit={guardar} noValidate className="flex flex-col gap-5">
       <section className="tarjeta grid gap-4 p-5 sm:grid-cols-2">
         <h2 className="font-bold sm:col-span-2">Curso</h2>
         <div className="sm:col-span-2">
@@ -124,11 +147,11 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
         </div>
         <div>
           <label className="etiqueta">Inicio *</label>
-          <input className="campo" type="datetime-local" required value={campos.inicio} onChange={set("inicio")} />
+          <CampoFechaHora valor={campos.inicio} onCambio={cambiarInicio} />
         </div>
         <div>
           <label className="etiqueta">Fin * (puede ser otro día)</label>
-          <input className="campo" type="datetime-local" required value={campos.fin} onChange={set("fin")} />
+          <CampoFechaHora valor={campos.fin} onCambio={(fin) => setCampos((c) => ({ ...c, fin }))} horaPorDefecto="18:00" />
         </div>
         <div>
           <label className="etiqueta">Cantidad de alumnos</label>
@@ -210,12 +233,12 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
         <h2 className="font-bold sm:col-span-2">Armado y desarmado</h2>
         <div>
           <label className="etiqueta">Horario de armado</label>
-          <input className="campo" type="datetime-local" value={campos.armadoEn} onChange={set("armadoEn")} />
+          <CampoFechaHora valor={campos.armadoEn} onCambio={(armadoEn) => setCampos((c) => ({ ...c, armadoEn }))} horaPorDefecto="08:00" opcional />
           <p className="mt-1 text-xs text-zinc-500">A esta hora las cosas tienen que estar descargadas en la sede.</p>
         </div>
         <div>
           <label className="etiqueta">Horario de desarmado</label>
-          <input className="campo" type="datetime-local" value={campos.desarmadoEn} onChange={set("desarmadoEn")} />
+          <CampoFechaHora valor={campos.desarmadoEn} onCambio={(desarmadoEn) => setCampos((c) => ({ ...c, desarmadoEn }))} horaPorDefecto="18:00" opcional />
         </div>
         <p className="text-xs text-zinc-500 sm:col-span-2">
           Los horarios de carga en depósito, salida, retiro y devolución, el chofer y el vehículo los carga el encargado de logística desde la
@@ -243,7 +266,7 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
         </div>
       </section>
 
-      {error && <MensajeError mensaje={error} />}
+      <div ref={errorRef}>{error && <MensajeError mensaje={error} />}</div>
       <div className="flex gap-2">
         <button type="submit" className="boton" disabled={guardando}>
           {guardando ? "Guardando…" : evento ? "Guardar cambios" : "Crear evento y cargar objetos"}

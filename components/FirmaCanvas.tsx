@@ -51,7 +51,13 @@ const FirmaCanvas = forwardRef<FirmaCanvasHandle>(function FirmaCanvas(_props, r
     const { x, y } = posicion(e);
     ctx.beginPath();
     ctx.moveTo(x, y);
-    canvas.setPointerCapture(e.pointerId);
+    // Algunos navegadores tiran error si el puntero ya no está activo; la
+    // captura solo mejora el trazo cuando el dedo sale del recuadro.
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      // se sigue dibujando igual
+    }
   }
 
   function mover(e: React.PointerEvent<HTMLCanvasElement>) {
