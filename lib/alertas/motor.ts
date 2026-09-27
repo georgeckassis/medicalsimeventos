@@ -3,6 +3,7 @@ import { obtenerConfiguracion } from "@/lib/db/configuracion";
 import { contactosNotificacion } from "@/lib/db/usuarios";
 import { ETAPAS, NOMBRE_ETAPA, type Etapa, type Rol } from "@/lib/db/types";
 import { aIsoONull, formatoFechaHora, formatoHora } from "@/lib/fechas";
+import { marca } from "@/lib/marca";
 import { emailConfigurado, enviarEmail } from "@/lib/notificaciones/email";
 import { enviarWhatsapp, whatsappConfigurado } from "@/lib/notificaciones/whatsapp";
 
@@ -223,8 +224,8 @@ async function notificar(alerta: AlertaDeseada): Promise<string> {
         emails,
         `${titulo} — ${alerta.mensaje.slice(0, 90)}`,
         `<p style="font-size:15px">${alerta.mensaje.replace(/</g, "&lt;")}</p>
-         ${enlace ? `<p><a href="${enlace}">Abrir en MedicalSim Eventos</a></p>` : ""}
-         <p style="color:#777;font-size:12px">Mensaje automático de MedicalSim Eventos.</p>`,
+         ${enlace ? `<p><a href="${enlace}">Abrir en ${marca.nombreApp}</a></p>` : ""}
+         <p style="color:#777;font-size:12px">Mensaje automático de ${marca.nombreApp}.</p>`,
       );
       resultado.push(`Mail enviado a ${emails.length} destinatario(s).`);
     } catch (error) {

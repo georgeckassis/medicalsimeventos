@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import AppShell from "@/components/AppShell";
+import { marca } from "@/lib/marca";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,22 +15,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Eventos — MedicalSim",
+  title: `Eventos — ${marca.nombre}`,
   description: "Calendario de cursos de capacitación, logística y tareas",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "MedicalSim Eventos",
+    title: marca.nombreApp,
   },
+  icons: { icon: marca.iconos.favicon, apple: marca.iconos.apple },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#2F71B8",
+  themeColor: marca.colores.principal,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="es"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // Colores de la marca: pisan los de app/globals.css y los usan todas las clases brand-*.
+      style={
+        {
+          "--brand-navy": marca.colores.principal,
+          "--brand-navy-dark": marca.colores.oscuro,
+          "--brand-cyan": marca.colores.acento,
+          "--brand-suave": marca.colores.suave,
+        } as React.CSSProperties
+      }
+    >
       <body className="min-h-full">
         {/* Si el navegador es muy viejo la app no llega a arrancar y los botones
             no responden: a los 10 s sin arrancar se muestra este aviso. */}

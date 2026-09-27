@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { marca } from "@/lib/marca";
 
 /**
  * Misma cuenta de Gmail por SMTP que el panel interno (contraseña de
@@ -15,7 +16,7 @@ export async function enviarEmail(destinatarios: string[], asunto: string, html:
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_APP_PASSWORD },
   });
   await transporter.sendMail({
-    from: `MedicalSim Eventos <${process.env.SMTP_USER}>`,
+    from: `${marca.nombreApp} <${process.env.SMTP_USER}>`,
     // Cada destinatario en copia oculta: no se exponen los mails entre sí.
     to: process.env.SMTP_USER,
     bcc: destinatarios,

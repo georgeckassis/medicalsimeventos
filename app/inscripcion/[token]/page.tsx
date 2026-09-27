@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import Image from "next/image";
+import { marca } from "@/lib/marca";
 import { mensajeDe, pedir } from "@/lib/cliente";
 import { formatoFechaHora } from "@/lib/fechas";
 
@@ -65,7 +66,7 @@ export default function InscripcionPage({ params }: { params: Promise<{ token: s
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-8">
-      <Image src="/logo.png" alt="MedicalSim" width={148} height={33} className="mx-auto mb-6 h-8 w-auto" />
+      <Image src={marca.logo.src} alt={marca.nombre} width={marca.logo.ancho} height={marca.logo.alto} className="mx-auto mb-6 h-8 w-auto" />
       {evento && (
         <div className="mb-5 text-center">
           <h1 className="text-xl font-bold text-brand-navy-dark">{evento.nombre}</h1>

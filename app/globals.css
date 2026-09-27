@@ -3,10 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  /* Manual de marca MedicalSim — ver lib/context/brand.ts */
+  /* Colores por defecto (MedicalSim); app/layout.tsx los reemplaza por los de
+     la marca configurada en lib/marca.ts. */
   --brand-navy: #2f71b8;
   --brand-navy-dark: #24578f;
   --brand-cyan: #14bbe7;
+  --brand-suave: #f2fafd;
 }
 
 @theme inline {
@@ -70,7 +72,7 @@ a.tarjeta,
 a.tarjeta:hover,
 .tarjeta-interactiva:hover {
   border-color: var(--brand-navy);
-  box-shadow: 0 4px 14px rgba(47, 113, 184, 0.12);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand-navy) 12%, transparent);
 }
 @media (prefers-color-scheme: dark) {
   .tarjeta {

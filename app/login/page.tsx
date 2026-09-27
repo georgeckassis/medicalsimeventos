@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { marca } from "@/lib/marca";
 import CampoPassword from "@/components/CampoPassword";
 import { mensajeDe, pedir } from "@/lib/cliente";
 
@@ -34,7 +35,7 @@ function FormularioLogin() {
 
   return (
     <form onSubmit={entrar} className="tarjeta w-full max-w-sm p-6">
-      <Image src="/logo.png" alt="MedicalSim" width={148} height={33} className="mx-auto mb-2 h-8 w-auto" />
+      <Image src={marca.logo.src} alt={marca.nombre} width={marca.logo.ancho} height={marca.logo.alto} className="mx-auto mb-2 h-8 w-auto" />
       <p className="mb-6 text-center text-sm font-bold text-brand-navy">Eventos y capacitaciones</p>
       <label className="etiqueta" htmlFor="email">
         Mail

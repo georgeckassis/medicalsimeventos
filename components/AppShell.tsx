@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { marca } from "@/lib/marca";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ProveedorSesion, useSesion } from "@/components/Sesion";
@@ -72,7 +73,7 @@ function Marco({ children }: { children: React.ReactNode }) {
           {navAbierto ? <IconClose size={20} /> : <IconMenu size={20} />}
         </button>
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo.png" alt="MedicalSim" width={148} height={33} priority className="h-7 w-auto" />
+          <Image src={marca.logo.src} alt={marca.nombre} width={marca.logo.ancho} height={marca.logo.alto} priority className="h-7 w-auto" />
           <span className="hidden text-sm font-bold text-brand-navy sm:inline">Eventos</span>
         </Link>
         <div className="ml-auto flex items-center gap-4">
@@ -112,7 +113,7 @@ function Marco({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1">
         {navAbierto && <div className="fixed inset-0 z-20 bg-black/30 md:hidden" onClick={() => setNavAbierto(false)} />}
         <aside
-          className={`fixed inset-y-0 top-16 left-0 z-30 w-60 flex-shrink-0 overflow-y-auto border-r border-zinc-200 bg-[#f2fafd] px-3 py-4 transition-transform duration-200 md:sticky md:h-[calc(100vh-4rem)] md:translate-x-0 dark:border-zinc-800 dark:bg-zinc-950 ${
+          className={`fixed inset-y-0 top-16 left-0 z-30 w-60 flex-shrink-0 overflow-y-auto border-r border-zinc-200 bg-[var(--brand-suave)] px-3 py-4 transition-transform duration-200 md:sticky md:h-[calc(100vh-4rem)] md:translate-x-0 dark:border-zinc-800 dark:bg-zinc-950 ${
             navAbierto ? "translate-x-0" : "-translate-x-full"
           }`}
         >

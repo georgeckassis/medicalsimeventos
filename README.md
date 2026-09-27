@@ -85,6 +85,16 @@ pendiente; el encargado general puede darlas por atendidas.
 
   (El plan Hobby solo permite crons diarios, por eso no viene incluido.)
 
+## Marcas (MedicalSim / ICOM Salud)
+
+La misma app se puede publicar con el logo, los colores y el nombre de otra
+empresa. Las marcas están definidas en `lib/marca.ts` (hoy: `medicalsim` e
+`icom`) y se elige con la variable `NEXT_PUBLIC_MARCA`. Para tener las dos a
+la vez: un segundo proyecto en Vercel importando el mismo repositorio, con
+`NEXT_PUBLIC_MARCA=icom` y su propia base de datos (así los datos de cada
+empresa quedan separados). Agregar otra marca es sumar una entrada en
+`lib/marca.ts` y sus archivos en `public/marcas/<marca>/`.
+
 ## Diagnóstico
 
 La pantalla **Diagnóstico** (encargado general y super admin) muestra los

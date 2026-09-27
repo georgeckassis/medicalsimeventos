@@ -6,6 +6,7 @@ import CampoFechaHora from "@/components/CampoFechaHora";
 import MensajeError from "@/components/MensajeError";
 import { mensajeDe, pedir } from "@/lib/cliente";
 import { reportar } from "@/lib/diagnostico";
+import { marca } from "@/lib/marca";
 import { isoALocal, localAIso } from "@/lib/fechas";
 import { ESTADOS_EVENTO, NOMBRE_ESTADO_EVENTO, type EstadoEvento, type Evento, type Institucion, type Usuario } from "@/lib/db/types";
 
@@ -163,7 +164,7 @@ export default function FormularioEvento({ evento }: { evento?: Evento }) {
       </section>
 
       <section className="tarjeta grid gap-4 p-5 sm:grid-cols-2">
-        <h2 className="font-bold sm:col-span-2">A cargo por MedicalSim</h2>
+        <h2 className="font-bold sm:col-span-2">A cargo por {marca.nombre}</h2>
         <div>
           <label className="etiqueta">Instructor a cargo</label>
           <select className="campo" value={campos.instructorId} onChange={set("instructorId")}>

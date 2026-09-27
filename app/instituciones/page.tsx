@@ -5,6 +5,7 @@ import Crud from "@/components/Crud";
 import Encabezado from "@/components/Encabezado";
 import { useSesion } from "@/components/Sesion";
 import { pedir } from "@/lib/cliente";
+import { marca } from "@/lib/marca";
 import type { Institucion, Usuario } from "@/lib/db/types";
 
 export default function InstitucionesPage() {
@@ -21,7 +22,7 @@ export default function InstitucionesPage() {
     <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <Encabezado
         titulo="Instituciones"
-        descripcion="Clientes de los cursos. Cada institución tiene su representante de ventas de MedicalSim; su representante (ej. el jefe médico) se da de alta en Usuarios."
+        descripcion={`Clientes de los cursos. Cada institución tiene su representante de ventas de ${marca.nombre}; su representante (ej. el jefe médico) se da de alta en Usuarios.`}
       />
       {sesion && (
         <Crud<Institucion>
@@ -38,7 +39,7 @@ export default function InstitucionesPage() {
               etiqueta: "Representante de ventas",
               tipo: "opciones",
               opciones: [{ valor: "", etiqueta: "— Sin asignar —" }, ...vendedores.map((r) => ({ valor: String(r.id), etiqueta: r.nombre }))],
-              ayuda: "Vendedor de MedicalSim que atiende esta institución. Se da de alta en Usuarios.",
+              ayuda: `Vendedor de ${marca.nombre} que atiende esta institución. Se da de alta en Usuarios.`,
             },
             { clave: "direccion", etiqueta: "Dirección" },
             { clave: "contacto", etiqueta: "Persona de contacto" },
