@@ -12,6 +12,7 @@ import type { Alerta } from "@/lib/db/types";
 export default function AlertasPage() {
   const { sesion, recargar } = useSesion();
   const gestor = sesion?.usuario.rol === "general" || sesion?.usuario.rol === "superadmin";
+  const puedeRevisar = gestor || sesion?.usuario.rol === "logistica";
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [todas, setTodas] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +44,7 @@ export default function AlertasPage() {
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={todas} onChange={(e) => setTodas(e.target.checked)} /> Ver también las resueltas
         </label>
+        {puedeRevisar && (
         <button
           type="button"
           className="boton-secundario"
@@ -62,6 +64,7 @@ export default function AlertasPage() {
         >
           {revisando ? "Revisando…" : "Revisar ahora"}
         </button>
+        )}
       </Encabezado>
       {error && <MensajeError mensaje={error} />}
       {alertas.length === 0 && <p className="text-sm text-zinc-400">No hay alertas {todas ? "" : "activas"}. 👌</p>}

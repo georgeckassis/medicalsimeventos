@@ -195,7 +195,15 @@ function PantallaEvento({ id }: { id: string }) {
       )}
       {pestana === "objetos" && <ListaObjetos detalle={detalle} onCambio={alCambiar} />}
       {pestana === "checklist" && <Checklist detalle={detalle} onCambio={alCambiar} />}
-      {pestana === "alumnos" && <Alumnos detalle={detalle} />}
+      {pestana === "alumnos" &&
+        (permisos.verAlumnos ? (
+          <Alumnos detalle={detalle} />
+        ) : (
+          <section className="tarjeta p-5 text-sm text-zinc-600">
+            Inscriptos: <span className="font-bold">{evento.alumnosInscriptos}</span> de {evento.cantidadAlumnos} previstos. Los datos
+            personales de los alumnos los ven el encargado general, el instructor y los representantes.
+          </section>
+        ))}
       {pestana === "validacion" && <Validaciones detalle={detalle} onCambio={alCambiar} />}
       {pestana === "historial" && <Historial eventoId={evento.id} version={version} />}
     </div>

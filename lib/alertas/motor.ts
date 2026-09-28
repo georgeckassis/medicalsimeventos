@@ -206,6 +206,11 @@ async function calcularAlertasDeseadas(ahora: Date): Promise<{ deseadas: AlertaD
   };
 }
 
+/** Los textos de los mails vienen de datos cargados por usuarios (nombres de eventos, tareas): se escapan. */
+function escaparHtml(texto: string): string {
+  return texto.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
 async function notificar(alerta: AlertaDeseada): Promise<string> {
   const contactos = await contactosNotificacion(alerta.destinatarios.roles, alerta.destinatarios.ids);
   const emails = [...new Set([...contactos.map((c) => c.email), ...alerta.destinatarios.emailsExtra])];
@@ -223,7 +228,7 @@ async function notificar(alerta: AlertaDeseada): Promise<string> {
       await enviarEmail(
         emails,
         `${titulo} — ${alerta.mensaje.slice(0, 90)}`,
-        `<p style="font-size:15px">${alerta.mensaje.replace(/</g, "&lt;")}</p>
+        `<p style="font-size:15px">${escaparHtml(alerta.mensaje)}</p>
          ${enlace ? `<p><a href="${enlace}">Abrir en ${marca.nombreApp}</a></p>` : ""}
          <p style="color:#777;font-size:12px">Mensaje automático de ${marca.nombreApp}.</p>`,
       );

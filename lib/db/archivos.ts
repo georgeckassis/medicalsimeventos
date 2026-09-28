@@ -16,9 +16,22 @@ export async function guardarDataUrl(dataUrl: string, usuarioId: number): Promis
   const datos = Buffer.from(m[2], "base64");
   if (datos.length === 0) throw new ErrorApi(400, "La imagen está vacía.");
   if (datos.length > TAMANO_MAXIMO) throw new ErrorApi(400, "La imagen supera los 3 MB.");
+  // Se revisa que el contenido sea de verdad una imagen de ese tipo (no un
+  // archivo disfrazado cambiándole la etiqueta).
+  if (!esImagenReal(datos, m[1])) throw new ErrorApi(400, "El archivo no es una imagen válida.");
   const sql = await db();
   const rows = await sql`INSERT INTO archivos (tipo_mime, datos, subido_por) VALUES (${m[1]}, ${datos}, ${usuarioId}) RETURNING id`;
   return rows[0].id;
+}
+
+const FIRMAS: Record<string, (d: Buffer) => boolean> = {
+  "image/png": (d) => d.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  "image/jpeg": (d) => d[0] === 0xff && d[1] === 0xd8 && d[2] === 0xff,
+  "image/webp": (d) => d.subarray(0, 4).toString("ascii") === "RIFF" && d.subarray(8, 12).toString("ascii") === "WEBP",
+};
+
+function esImagenReal(datos: Buffer, tipo: string): boolean {
+  return FIRMAS[tipo]?.(datos) ?? false;
 }
 
 /** Devuelve también el evento al que pertenece, para validar que quien lo pide lo pueda ver. */

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { idDeParams, leerCuerpo, requerirUsuario, respuestaError } from "@/lib/api";
+import { ErrorApi, idDeParams, leerCuerpo, requerirUsuario, respuestaError } from "@/lib/api";
+import { problemaPassword } from "@/lib/auth/password";
 import { esGestor } from "@/lib/auth/permisos";
-import { actualizarUsuario } from "@/lib/db/usuarios";
+import { actualizarUsuario, sinDatosInternos } from "@/lib/db/usuarios";
 import { esquemaUsuario } from "@/lib/esquemas";
 
 /** No hay DELETE: un usuario se desactiva (activo = false) para no perder quién tildó o firmó cada cosa. */
@@ -16,9 +17,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (input.rol === "representante" && !input.institucionId) {
       return NextResponse.json({ error: "El representante de la institución tiene que tener su institución asignada." }, { status: 400 });
     }
+    if (input.password) {
+      const problema = problemaPassword(input.password, input.email);
+      if (problema) throw new ErrorApi(400, problema);
+    }
     const usuario = await actualizarUsuario(id, input, input.password);
     if (!usuario) return NextResponse.json({ error: "No encontrado." }, { status: 404 });
-    return NextResponse.json(usuario);
+    return NextResponse.json(sinDatosInternos(usuario));
   } catch (error) {
     return respuestaError(error, "actualizando usuario", { usuarios_email_key: "Ya existe un usuario con ese mail." });
   }

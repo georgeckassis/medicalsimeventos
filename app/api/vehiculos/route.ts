@@ -6,7 +6,7 @@ import { crearVehiculo, listarVehiculos } from "@/lib/db/vehiculos";
 
 export async function GET() {
   try {
-    await requerirUsuario();
+    await requerirUsuario((u) => puedeEditarLogistica(u.rol));
     return NextResponse.json(await listarVehiculos());
   } catch (error) {
     return respuestaError(error, "listando vehículos");

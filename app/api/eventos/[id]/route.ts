@@ -1,7 +1,7 @@
 import { after, NextRequest, NextResponse } from "next/server";
 import { idDeParams, leerCuerpo, requerirUsuario, respuestaError } from "@/lib/api";
 import { eventoVisible, validarAsignado } from "@/lib/acceso";
-import { esGestor, puedeEditarLogistica, puedeTildar, puedeValidarComoRepresentante } from "@/lib/auth/permisos";
+import { esGestor, puedeEditarLogistica, puedeTildar, puedeValidarComoRepresentante, puedeVerAlumnos } from "@/lib/auth/permisos";
 import { revisarAlertasSiCorresponde } from "@/lib/alertas/motor";
 import { listarAlertas } from "@/lib/db/alertas";
 import {
@@ -38,6 +38,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
         editarLogistica: puedeEditarLogistica(usuario.rol),
         tildar: puedeTildar(usuario.rol),
         validar: puedeValidarComoRepresentante(usuario.rol),
+        verAlumnos: puedeVerAlumnos(usuario.rol),
       },
     });
   } catch (error) {

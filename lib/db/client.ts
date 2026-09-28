@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { hashPassword } from "@/lib/auth/password";
+import { hashPassword, verificarPassword } from "@/lib/auth/password";
 
 let cachedSql: postgres.Sql | null = null;
 let schemaReady: Promise<void> | null = null;
@@ -299,6 +299,23 @@ async function crearTablas(sql: postgres.ISql): Promise<void> {
     )
   `;
 
+  // Seguridad: versión de sesión (al cambiarla se cierran todas las sesiones
+  // abiertas de ese usuario) y cambio de contraseña obligatorio cuando la puso
+  // otra persona (alta, reseteo) o es la inicial del super admin.
+  await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS sesion_version INTEGER NOT NULL DEFAULT 0`;
+  await sql`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS debe_cambiar_password BOOLEAN NOT NULL DEFAULT false`;
+
+  // Límites de intentos (login, formulario público, etc.) guardados en la base:
+  // en Vercel cada pedido puede caer en una instancia distinta, así que un
+  // contador en memoria no frena a nadie.
+  await sql`
+    CREATE TABLE IF NOT EXISTS limites (
+      clave TEXT PRIMARY KEY,
+      desde TIMESTAMPTZ NOT NULL DEFAULT now(),
+      cantidad INTEGER NOT NULL DEFAULT 0
+    )
+  `;
+
   await sql`CREATE INDEX IF NOT EXISTS eventos_inicio_idx ON eventos (inicio)`;
   await sql`CREATE INDEX IF NOT EXISTS historial_evento_idx ON historial (evento_id, creado_en DESC)`;
   await sql`CREATE INDEX IF NOT EXISTS alertas_activas_idx ON alertas (resuelta_en, creada_en DESC)`;
@@ -313,12 +330,19 @@ async function crearTablas(sql: postgres.ISql): Promise<void> {
  */
 async function crearSuperadmin(sql: postgres.ISql): Promise<void> {
   const email = (process.env.SUPERADMIN_EMAIL || "george@medicalsim.com.ar").trim().toLowerCase();
-  const existe = await sql`SELECT 1 FROM usuarios WHERE email = ${email}`;
-  if (existe.length > 0) return;
+  const existe = await sql`SELECT id, password_hash, debe_cambiar_password FROM usuarios WHERE email = ${email}`;
+  if (existe.length > 0) {
+    // Si todavía tiene la contraseña inicial "admin", se le exige cambiarla.
+    const u = existe[0];
+    if (!u.debe_cambiar_password && (await verificarPassword("admin", u.password_hash))) {
+      await sql`UPDATE usuarios SET debe_cambiar_password = true WHERE id = ${u.id}`;
+    }
+    return;
+  }
   const password = process.env.SUPERADMIN_PASSWORD || "admin";
   await sql`
-    INSERT INTO usuarios (email, nombre, rol, password_hash)
-    VALUES (${email}, 'MedicalSim', 'superadmin', ${await hashPassword(password)})
+    INSERT INTO usuarios (email, nombre, rol, password_hash, debe_cambiar_password)
+    VALUES (${email}, 'MedicalSim', 'superadmin', ${await hashPassword(password)}, true)
   `;
 }
 

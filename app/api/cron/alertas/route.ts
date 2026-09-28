@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { respuestaError } from "@/lib/api";
 import { revisarAlertas } from "@/lib/alertas/motor";
@@ -9,7 +10,9 @@ import { revisarAlertas } from "@/lib/alertas/motor";
  */
 export async function GET(req: NextRequest) {
   const secreto = process.env.CRON_SECRET;
-  if (!secreto || req.headers.get("authorization") !== `Bearer ${secreto}`) {
+  const recibido = Buffer.from(req.headers.get("authorization") ?? "");
+  const esperado = Buffer.from(`Bearer ${secreto}`);
+  if (!secreto || recibido.length !== esperado.length || !timingSafeEqual(recibido, esperado)) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
   try {

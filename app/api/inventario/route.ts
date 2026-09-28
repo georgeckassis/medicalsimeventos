@@ -6,7 +6,7 @@ import { crearItemInventario, listarInventario } from "@/lib/db/inventario";
 
 export async function GET() {
   try {
-    await requerirUsuario();
+    await requerirUsuario((u) => puedeEditarLogistica(u.rol));
     return NextResponse.json(await listarInventario());
   } catch (error) {
     return respuestaError(error, "listando inventario");

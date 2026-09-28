@@ -85,6 +85,40 @@ pendiente; el encargado general puede darlas por atendidas.
 
   (El plan Hobby solo permite crons diarios, por eso no viene incluido.)
 
+## Seguridad
+
+- **Contraseñas**: se guardan cifradas (scrypt), nunca en texto. Mínimo 8
+  caracteres con letras y números, sin contraseñas comunes ni el propio mail.
+  La que pone un administrador (alta o reseteo) y la inicial del super admin
+  son **temporales**: hasta cambiarlas no se puede usar nada más.
+- **Login**: 5 intentos fallidos por mail y 20 por IP cada 15 minutos
+  (contador en la base, vale con varias instancias). El mensaje y el tiempo
+  de respuesta son iguales exista o no el mail. Cada intento fallido queda en
+  Diagnóstico.
+- **Sesiones**: cookie firmada (HMAC), `httpOnly`, `secure` y `SameSite=Lax`;
+  se cierran por inactividad (8 h) y como máximo a los 7 días. Cambiar la
+  contraseña, desactivar a alguien o cambiarle el rol cierra todas sus
+  sesiones; en Mi cuenta hay "Cerrar sesión en los demás dispositivos".
+- **Pedidos desde otros sitios (CSRF)**: toda modificación tiene que venir
+  del propio dominio.
+- **Qué ve cada rol**: la API valida el rol en cada pedido. Datos personales
+  (mails, teléfonos, DNI de alumnos y usuarios) solo para quien los
+  necesita; el representante de la institución solo ve su institución.
+- **Archivos**: solo imágenes PNG/JPG/WEBP de hasta 3 MB, verificando el
+  contenido real (no solo la etiqueta), y solo para quien puede ver el evento.
+- **Errores**: al navegador nunca le llega el error interno (SQL, nombres de
+  tablas); queda completo en Diagnóstico.
+- **Navegador**: Content-Security-Policy, sin inclusión en otros sitios
+  (anti-clickjacking), HSTS, `nosniff`, Referrer y Permissions-Policy.
+- **Formulario público de QR**: 30 envíos por IP cada 10 minutos y 500 por
+  evento por día.
+- **Base de datos**: todas las consultas son parametrizadas (sin inyección
+  SQL).
+
+Recomendado además: repositorio **privado** en GitHub (Vercel funciona
+igual), `SESSION_SECRET` largo y distinto en cada proyecto, y activar la
+verificación en dos pasos en GitHub, Vercel y Neon.
+
 ## Marcas (MedicalSim / ICOM Salud)
 
 La misma app se puede publicar con el logo, los colores y el nombre de otra

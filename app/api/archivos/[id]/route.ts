@@ -11,7 +11,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!archivo || archivo.eventoId === null) return NextResponse.json({ error: "No encontrado." }, { status: 404 });
     await eventoVisible(usuario, archivo.eventoId);
     return new NextResponse(new Uint8Array(archivo.datos), {
-      headers: { "Content-Type": archivo.tipoMime, "Cache-Control": "private, max-age=86400" },
+      headers: {
+        "Content-Type": archivo.tipoMime,
+        "Cache-Control": "private, max-age=86400",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Disposition": "inline",
+        // Aunque alguien lograra subir otra cosa, el navegador no la ejecuta.
+        "Content-Security-Policy": "default-src 'none'; img-src 'self'; sandbox",
+      },
     });
   } catch (error) {
     return respuestaError(error, "leyendo archivo");

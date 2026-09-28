@@ -18,3 +18,11 @@ export function puedeTildar(rol: Rol): boolean {
 export function puedeValidarComoRepresentante(rol: Rol): boolean {
   return rol === "representante";
 }
+
+/**
+ * Datos personales de los alumnos (DNI, mail, teléfono): solo quien los
+ * necesita. Logística y el chofer ven la cantidad, no la lista.
+ */
+export function puedeVerAlumnos(rol: Rol): boolean {
+  return esGestor(rol) || rol === "instructor" || rol === "vendedor" || rol === "representante";
+}

@@ -8,7 +8,7 @@ interface DatosSesion {
   usuario: Usuario;
   alertasActivas: number;
   incumplimientos: number;
-  passwordInicial: boolean;
+  debeCambiarPassword: boolean;
 }
 
 const Contexto = createContext<{ sesion: DatosSesion | null; recargar: () => void }>({ sesion: null, recargar: () => {} });

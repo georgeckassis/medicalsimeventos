@@ -15,6 +15,7 @@ export default function CuentaPage() {
   const [repetida, setRepetida] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
 
   async function cambiar(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +57,7 @@ export default function CuentaPage() {
           <CampoPassword valor={actual} onCambio={setActual} autoComplete="current-password" requerido />
         </div>
         <div>
-          <label className="etiqueta">Contraseña nueva (mínimo 8 caracteres)</label>
+          <label className="etiqueta">Contraseña nueva (mínimo 8 caracteres, con letras y números)</label>
           <CampoPassword valor={nueva} onCambio={setNueva} autoComplete="new-password" requerido minimo={8} />
         </div>
         <div>
@@ -71,6 +72,31 @@ export default function CuentaPage() {
           </button>
         </div>
       </form>
+
+      <section className="tarjeta mt-5 grid gap-2 p-5 text-sm">
+        <h2 className="font-bold">Sesiones abiertas</h2>
+        <p className="text-zinc-500">
+          Si perdiste el celular o entraste desde una computadora ajena, cerrá la sesión en todos los demás dispositivos. Esta queda abierta.
+        </p>
+        <div>
+          <button
+            type="button"
+            className="boton-secundario"
+            onClick={async () => {
+              setError(null);
+              try {
+                await pedir("/api/cuenta/sesiones", { method: "DELETE" });
+                setAviso("Listo: se cerraron las sesiones en los demás dispositivos.");
+              } catch (err) {
+                setError(mensajeDe(err));
+              }
+            }}
+          >
+            Cerrar sesión en los demás dispositivos
+          </button>
+          {aviso && <p className="mt-2 text-emerald-700">{aviso}</p>}
+        </div>
+      </section>
     </div>
   );
 }

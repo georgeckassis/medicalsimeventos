@@ -85,6 +85,7 @@ export default function UsuariosPage() {
               render: (u) => (
                 <>
                   {NOMBRE_ROL[u.rol]}
+                  {u.debeCambiarPassword && <span className="block text-xs text-amber-700">Contraseña temporal (la cambia al entrar)</span>}
                   {u.rol === "representante" && u.institucionNombre && (
                     <span className="block text-xs text-zinc-500">{u.institucionNombre}</span>
                   )}

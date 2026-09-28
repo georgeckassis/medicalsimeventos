@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { after, NextResponse } from "next/server";
 import { z } from "zod";
 import { COOKIE_SESION, leerTokenSesion } from "@/lib/auth/sesion";
-import { esViolacionUnicidad, mensajeError } from "@/lib/db/errores";
+import { esViolacionUnicidad, mensajeError, mensajePublico } from "@/lib/db/errores";
 import { registrarDiagnostico } from "@/lib/db/diagnostico";
 import { obtenerUsuario } from "@/lib/db/usuarios";
 import type { Usuario } from "@/lib/db/types";
@@ -18,16 +18,28 @@ export class ErrorApi extends Error {
 }
 
 export async function usuarioActual(): Promise<Usuario | null> {
-  const id = leerTokenSesion((await cookies()).get(COOKIE_SESION)?.value);
-  if (!id) return null;
-  const usuario = await obtenerUsuario(id);
-  return usuario && usuario.activo ? usuario : null;
+  const sesion = leerTokenSesion((await cookies()).get(COOKIE_SESION)?.value);
+  if (!sesion) return null;
+  const usuario = await obtenerUsuario(sesion.usuarioId);
+  // Sesión revocada (cambio de contraseña, usuario desactivado o "cerrar todas las sesiones").
+  if (!usuario || !usuario.activo || usuario.sesionVersion !== sesion.version) return null;
+  return usuario;
 }
 
-/** Usuario logueado y activo; si se pasa `permitido`, además valida su rol. */
-export async function requerirUsuario(permitido?: (u: Usuario) => boolean): Promise<Usuario> {
+/**
+ * Usuario logueado y activo; si se pasa `permitido`, además valida su rol.
+ * Mientras tenga que cambiar la contraseña solo puede usar lo mínimo
+ * (`permitirSinCambiarPassword`): ver su sesión y cambiarla.
+ */
+export async function requerirUsuario(
+  permitido?: (u: Usuario) => boolean,
+  opciones: { permitirSinCambiarPassword?: boolean } = {},
+): Promise<Usuario> {
   const usuario = await usuarioActual();
   if (!usuario) throw new ErrorApi(401, "Tu sesión expiró. Volvé a iniciar sesión.");
+  if (usuario.debeCambiarPassword && !opciones.permitirSinCambiarPassword) {
+    throw new ErrorApi(403, "Antes de seguir tenés que cambiar tu contraseña (Mi cuenta).");
+  }
   if (permitido && !permitido(usuario)) throw new ErrorApi(403, "Tu rol no tiene permiso para esta acción.");
   return usuario;
 }
@@ -50,7 +62,8 @@ export async function leerCuerpo<T extends z.ZodType>(req: Request, esquema: T):
 
 export function idDeParams(valor: string): number {
   const id = Number(valor);
-  if (!Number.isInteger(id) || id <= 0) throw new ErrorApi(400, "Id inválido.");
+  // Tope de un INTEGER de Postgres: un número más grande no puede existir.
+  if (!Number.isInteger(id) || id <= 0 || id > 2_147_483_647) throw new ErrorApi(400, "Id inválido.");
   return id;
 }
 
@@ -70,7 +83,9 @@ export function respuestaError(error: unknown, contexto: string, mensajesUnicida
   console.error(`Error ${contexto}:`, error);
   const detalle = error instanceof Error ? `${error.name}: ${error.message}\n${error.stack ?? ""}` : String(error);
   after(() => registrarDiagnostico({ tipo: "error_servidor", mensaje: mensajeError(error), detalle, ruta: contexto }));
-  return NextResponse.json({ error: mensajeError(error) }, { status: 500 });
+  // Al navegador nunca le llega el error crudo (nombres de tablas, SQL,
+  // rutas del servidor): queda completo en Diagnóstico.
+  return NextResponse.json({ error: mensajePublico(error) }, { status: 500 });
 }
 
 /** Campos de texto opcionales: undefined → "", recortados. */

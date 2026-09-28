@@ -58,7 +58,13 @@ function Marco({ children }: { children: React.ReactNode }) {
   const [navAbierto, setNavAbierto] = useState(false);
   const rol = sesion?.usuario.rol;
 
-  const items = NAV.filter((i) => !i.roles || (rol && i.roles.includes(rol)));
+  const debeCambiar = sesion?.debeCambiarPassword ?? false;
+  // Mientras tenga que cambiar la contraseña, solo puede estar en "Mi cuenta".
+  useEffect(() => {
+    if (debeCambiar && pathname !== "/cuenta") router.replace("/cuenta");
+  }, [debeCambiar, pathname, router]);
+
+  const items = debeCambiar ? NAV.filter((i) => i.href === "/cuenta") : NAV.filter((i) => !i.roles || (rol && i.roles.includes(rol)));
   const activo = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   return (
@@ -141,13 +147,9 @@ function Marco({ children }: { children: React.ReactNode }) {
         </aside>
 
         <main className="min-w-0 flex-1">
-          {sesion?.passwordInicial && (
+          {debeCambiar && (
             <div className="border-b border-amber-300 bg-amber-50 px-6 py-2 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-              Estás usando la contraseña inicial del super admin.{" "}
-              <Link href="/cuenta" className="font-bold underline">
-                Cambiala acá
-              </Link>
-              .
+              Por seguridad, antes de usar la app tenés que elegir una contraseña nueva (la actual es temporal o la inicial).
             </div>
           )}
           {children}

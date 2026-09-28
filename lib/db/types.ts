@@ -51,6 +51,10 @@ export interface Usuario {
   institucionId: number | null;
   institucionNombre: string | null;
   activo: boolean;
+  /** Tiene que cambiar la contraseña antes de usar la app (la puso otra persona o es la inicial). */
+  debeCambiarPassword: boolean;
+  /** Solo del lado del servidor: versión de sesión vigente. */
+  sesionVersion?: number;
 }
 
 export interface Institucion {
@@ -219,5 +223,5 @@ export interface DetalleEvento {
   cierres: CierreEtapa[];
   validaciones: ValidacionRepresentante[];
   alertas: Alerta[];
-  permisos: { editarEvento: boolean; editarLogistica: boolean; tildar: boolean; validar: boolean };
+  permisos: { editarEvento: boolean; editarLogistica: boolean; tildar: boolean; validar: boolean; verAlumnos: boolean };
 }

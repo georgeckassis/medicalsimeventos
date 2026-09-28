@@ -14,7 +14,16 @@ function mapRow(row: any): Usuario {
     institucionId: row.institucion_id,
     institucionNombre: row.institucion_nombre ?? null,
     activo: row.activo,
+    debeCambiarPassword: row.debe_cambiar_password ?? false,
+    sesionVersion: Number(row.sesion_version ?? 0),
   };
+}
+
+/** Lo que se muestra a otros usuarios: sin datos internos de la sesión. */
+export function sinDatosInternos(u: Usuario): Usuario {
+  const publico = { ...u };
+  delete publico.sesionVersion;
+  return publico;
 }
 
 export async function obtenerUsuario(id: number): Promise<Usuario | null> {
@@ -70,9 +79,9 @@ export interface UsuarioInput {
 export async function crearUsuario(input: UsuarioInput & { password: string }): Promise<Usuario> {
   const sql = await db();
   const rows = await sql`
-    INSERT INTO usuarios (email, nombre, rol, password_hash, telefono, dni, institucion_id, activo)
+    INSERT INTO usuarios (email, nombre, rol, password_hash, telefono, dni, institucion_id, activo, debe_cambiar_password)
     VALUES (${input.email.toLowerCase()}, ${input.nombre}, ${input.rol}, ${await hashPassword(input.password)},
-            ${input.telefono}, ${input.dni}, ${input.institucionId}, ${input.activo})
+            ${input.telefono}, ${input.dni}, ${input.institucionId}, ${input.activo}, true)
     RETURNING id
   `;
   return (await obtenerUsuario(rows[0].id))!;
@@ -83,18 +92,37 @@ export async function actualizarUsuario(id: number, input: UsuarioInput, passwor
   const rows = await sql`
     UPDATE usuarios SET
       email = ${input.email.toLowerCase()}, nombre = ${input.nombre}, rol = ${input.rol},
-      telefono = ${input.telefono}, dni = ${input.dni}, institucion_id = ${input.institucionId}, activo = ${input.activo}
+      telefono = ${input.telefono}, dni = ${input.dni}, institucion_id = ${input.institucionId}, activo = ${input.activo},
+      -- Al desactivarlo o cambiarle el rol se cierran sus sesiones abiertas.
+      sesion_version = sesion_version + CASE WHEN activo <> ${input.activo} OR rol <> ${input.rol} THEN 1 ELSE 0 END
     WHERE id = ${id} AND rol <> 'superadmin'
     RETURNING id
   `;
   if (!rows.length) return null;
-  if (password) await cambiarPassword(id, password);
+  // Contraseña puesta por un administrador: es temporal, la persona la tiene que cambiar al entrar.
+  if (password) await cambiarPassword(id, password, { temporal: true });
   return obtenerUsuario(id);
 }
 
-export async function cambiarPassword(id: number, password: string): Promise<void> {
+/**
+ * Cambia la contraseña y cierra todas las sesiones abiertas de ese usuario
+ * (devuelve la nueva versión de sesión, para volver a emitir la propia).
+ */
+export async function cambiarPassword(id: number, password: string, opciones: { temporal: boolean }): Promise<number> {
   const sql = await db();
-  await sql`UPDATE usuarios SET password_hash = ${await hashPassword(password)} WHERE id = ${id}`;
+  const rows = await sql`
+    UPDATE usuarios SET password_hash = ${await hashPassword(password)}, debe_cambiar_password = ${opciones.temporal},
+      sesion_version = sesion_version + 1
+    WHERE id = ${id} RETURNING sesion_version
+  `;
+  return Number(rows[0]?.sesion_version ?? 0);
+}
+
+/** "Cerrar sesión en todos los dispositivos". */
+export async function cerrarSesiones(id: number): Promise<number> {
+  const sql = await db();
+  const rows = await sql`UPDATE usuarios SET sesion_version = sesion_version + 1 WHERE id = ${id} RETURNING sesion_version`;
+  return Number(rows[0]?.sesion_version ?? 0);
 }
 
 /** Emails y teléfonos para notificar: todos los usuarios activos con alguno de esos roles o ids. */

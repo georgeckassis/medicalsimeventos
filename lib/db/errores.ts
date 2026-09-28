@@ -41,3 +41,9 @@ export function mensajeError(error: unknown, fallback = "Error desconocido."): s
   }
   return error instanceof Error ? error.message : fallback;
 }
+
+/** Lo que ve el usuario ante un error inesperado: sin detalles internos del servidor ni de la base. */
+export function mensajePublico(error: unknown): string {
+  if (esErrorDeConexion(error)) return mensajeError(error);
+  return "Ocurrió un error inesperado. Probá de nuevo; si sigue pasando, avisale al encargado general (queda registrado en Diagnóstico).";
+}

@@ -5,9 +5,10 @@ import { validarAsignado } from "@/lib/acceso";
 import { esGestor } from "@/lib/auth/permisos";
 import { crearInstitucion, listarInstituciones } from "@/lib/db/instituciones";
 
+// Lista de clientes: solo para el encargado general (el resto no la necesita).
 export async function GET() {
   try {
-    await requerirUsuario();
+    await requerirUsuario((u) => esGestor(u.rol));
     return NextResponse.json(await listarInstituciones());
   } catch (error) {
     return respuestaError(error, "listando instituciones");
