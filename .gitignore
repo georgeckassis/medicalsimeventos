@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# simulador: se copia de node_modules en cada npm install (scripts/copiar-mediapipe.mjs)
+/public/simulador-recursos/mediapipe/

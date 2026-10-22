@@ -5,8 +5,8 @@ practiquen los movimientos de la consola de un robot quirúrgico (tipo da Vinci)
 usando una **webcam y la pantalla de la PC**, como paso previo a la práctica en
 un robot real. Más adelante se sumará un visor de VR.
 
-Estado: en definición. Este documento se va actualizando a medida que se
-cierran decisiones.
+Estado: **MVP implementado** (ver "Implementación"). Este documento se va
+actualizando a medida que se cierran decisiones.
 
 ## Alcance
 
@@ -25,11 +25,13 @@ tercer brazo, VR, modo remoto con instructor a distancia.
 | Tema | Decisión |
 |---|---|
 | Dónde vive | Módulo dentro de `medicalsimeventos` |
-| Captura | Webcam de la PC, detección de manos en el navegador |
+| Captura | Webcam de la PC **apuntando a las manos desde arriba** (no a la cara), detección de manos en el navegador |
 | Visualización | Pantalla de la PC (VR más adelante, sin rehacer la lógica) |
 | Pedales | Teclado en el MVP; pedal propio fabricado más adelante (ver abajo) |
 | Ejercicios MVP | Calibración, clutch y cámara, pick & place, ring walk |
 | Procesamiento | Todo local en el navegador (tracking, física y render). El servidor solo guarda sesiones |
+| Acceso | Por ahora solo super admin y encargado general (para probarlo). Después se habilita por nivel de usuario |
+| Resultados | Al terminar cada ejercicio se muestra un resumen y queda guardado en el navegador. Las métricas formales y su guardado en la base vienen después |
 
 ## Modelo de la consola que se emula
 
@@ -46,9 +48,12 @@ tercer brazo, VR, modo remoto con instructor a distancia.
 | Cabeza fuera del visor → instrumentos bloqueados | Si se pierde una mano, su instrumento se congela (clutch automático) |
 | Reenganche: alinear la pinza con el instrumento para retomar el control | Al volver la mano o soltar el clutch, se retoma de forma relativa (sin saltos) |
 
-**Riesgo principal:** la profundidad (eje Z) con una sola webcam es poco
-precisa. Se estima con el tamaño aparente de la mano y se compensa con el
-escalado. Se valida con el prototipo antes de construir los ejercicios.
+**Con la cámara cenital** (desde arriba), izquierda-derecha y
+adelante-atrás salen directo de la imagen y son precisos. La altura de la
+mano se estima por su tamaño aparente (más cerca de la cámara = más grande):
+es el eje más ruidoso, y se compensa con más filtrado, el escalado y ayudas
+visuales (sombras y una línea vertical de la punta al piso). Una segunda
+cámara lo resuelve (ver "Próximos pasos").
 
 ## Arquitectura
 
@@ -91,8 +96,11 @@ cámara → tracking (21 puntos por mano)
 ### Tecnología propuesta
 
 - Detección de manos: MediaPipe Hand Landmarker (`@mediapipe/tasks-vision`).
+  El motor (WebAssembly) y el modelo se sirven desde la propia app.
 - 3D: Three.js.
-- Física: Rapier (`@dimforge/rapier3d-compat`).
+- Física: en el MVP no hace falta un motor; el agarre y las caídas se
+  resuelven con reglas simples. Para sutura y tejido blando se evaluará
+  Rapier u otro.
 - Todo del lado del cliente; las páginas del simulador no se renderizan en el
   servidor.
 
@@ -146,7 +154,7 @@ Precisión de la trayectoria y uso de la muñeca.
 
 ## Pedales
 
-**MVP:** teclas configurables del teclado.
+**MVP:** teclas del teclado (Espacio = clutch, Shift = cámara).
 
 **Después:** pedal fabricado por MedicalSim.
 
@@ -163,11 +171,79 @@ Precisión de la trayectoria y uso de la muñeca.
 - Para probar ergonomía antes de fabricar: pedal USB triple programable
   comercial.
 
+## Implementación (MVP)
+
+Pantallas (menú lateral → **Simulador**):
+
+- `/simulador`: calibración, ejercicios, configuración del puesto y últimos
+  resultados.
+- `/simulador/calibracion`: orientación de la cámara, posición neutra y rango
+  de la pinza.
+- `/simulador/<ejercicio>`: `clutch-camara`, `pick-place`, `ring-walk`.
+
+Código:
+
+| Archivo | Qué hace |
+|---|---|
+| `lib/simulador/tracking/` | `ProveedorManos` (interfaz) y `ProveedorWebcam` (MediaPipe) |
+| `lib/simulador/consola/maestro.ts` | Mano → controlador maestro: posición (cm), orientación de la palma, apertura de la pinza; asigna izquierda/derecha por continuidad |
+| `lib/simulador/consola/filtros.ts` | Filtro One Euro (cumple el rol del filtro de temblor) |
+| `lib/simulador/consola/pedales.ts` | Clutch y cámara desde el teclado (o el pedal, que se presenta como teclado) |
+| `lib/simulador/teleoperacion/` | Escala, clutch, cámara, alineación ojo-mano, límites, reenganche de la pinza |
+| `lib/simulador/instrumentos/` | Pinza: vástago por el trocar, muñeca y mandíbulas |
+| `lib/simulador/ejercicios/` | Interfaz `Ejercicio`, agarre y transferencias, los 3 ejercicios y el catálogo |
+| `lib/simulador/eventos/bus.ts` | Registro de eventos de la sesión (base de las métricas) |
+| `lib/simulador/simulacion.ts` | Ciclo de cada cuadro y resumen de resultados |
+
+Teclas por defecto: **Espacio** = clutch, **Shift** = cámara, **Enter** =
+comenzar/pausar. F13 y F14 quedan reservadas para el pedal.
+
+Para sumar un ejercicio: implementar `Ejercicio` (`lib/simulador/ejercicios/tipos.ts`)
+y agregarlo a `catalogo.ts`.
+
+## Próximos pasos
+
+### Dos cámaras
+
+El navegador puede abrir dos webcams a la vez (cada una con su `deviceId`).
+Conviene conectarlas a puertos USB de controladores distintos, o bajar la
+resolución (640×480), porque dos cámaras HD pueden saturar un mismo puerto.
+
+- **Arriba + costado (recomendado para empezar):** la cenital da
+  izquierda-derecha y adelante-atrás; la lateral da la altura directo. No
+  necesita calibración estéreo, solo saber dónde está cada una.
+- **Estéreo (dos cámaras juntas):** triangulación 3D completa; requiere
+  calibrarlas con un patrón (tablero de ajedrez o marcadores ArUco).
+
+En el código entra como un nuevo `ProveedorManos` que combina las dos
+detecciones; el resto no cambia.
+
+### Soporte o "maestro" físico
+
+Una réplica simple del controlador de la consola: un brazo articulado o
+cardán donde se apoya la mano, con los dedos en anillos.
+
+- Orientación: un sensor inercial (ej. BNO085) o encoders en cada eje.
+- Pinza: un potenciómetro o sensor magnético (hall) entre los anillos.
+- Posición: encoders en el brazo, o seguir usando la cámara solo para eso.
+- Un microcontrolador lo envía por USB (WebHID / WebSerial desde el
+  navegador).
+
+Da sensación física real (apoyo, resistencia, rango limitado como en la
+consola) y elimina el ruido de la cámara. En el código entra como otra fuente
+de "controladores maestros" que reemplaza a cámara + `Consola`; la
+teleoperación y los ejercicios no cambian.
+
+### Otros
+
+- Métricas formales (economía de movimiento, suavidad, errores) y guardado en
+  la base, asociado al residente y al evento.
+- Acceso por nivel de usuario (rol residente, vista del instructor).
+- Sutura (porta-agujas y aguja), tejido blando, energía, tercer brazo.
+- Visor de VR (WebXR): otro modo de render y, con hand tracking del visor,
+  otro proveedor de manos.
+
 ## Preguntas abiertas
 
-- Ubicación de la cámara: ¿al frente con las manos en el aire (propuesta) o
-  arriba mirando hacia abajo?
-- Acceso: ¿solo usuarios logueados? ¿Rol nuevo "residente"? ¿Qué ve el
-  instructor?
-- PC y webcam con las que se va a usar.
-- Teclas por defecto para clutch y cámara.
+- PC y webcam con las que se va a usar (para ajustar los valores por defecto).
+- Qué ve el instructor y cómo se asocian los resultados a cada residente.

@@ -26,3 +26,8 @@ export function puedeValidarComoRepresentante(rol: Rol): boolean {
 export function puedeVerAlumnos(rol: Rol): boolean {
   return esGestor(rol) || rol === "instructor" || rol === "vendedor" || rol === "representante";
 }
+
+/** Simulador de cirugía robótica: por ahora solo para probarlo internamente. */
+export function puedeUsarSimulador(rol: Rol): boolean {
+  return esGestor(rol);
+}

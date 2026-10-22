@@ -7,10 +7,12 @@ const desarrollo = process.env.NODE_ENV !== "production";
  * de su propio dominio, no se puede mostrar dentro de otro sitio (evita
  * clickjacking) y los formularios solo envían a la propia app.
  * 'unsafe-inline' en scripts lo necesita Next.js para sus scripts de arranque.
+ * 'wasm-unsafe-eval' deja compilar WebAssembly (la detección de manos del
+ * simulador); no habilita eval de JavaScript.
  */
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${desarrollo ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${desarrollo ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
@@ -34,7 +36,7 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          // La cámara se usa para la foto de la carga; nada más.
+          // La cámara se usa para la foto de la carga y el simulador; nada más.
           { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=(), usb=()" },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
@@ -44,6 +46,12 @@ const nextConfig: NextConfig = {
         // Las respuestas de la API nunca se guardan en cachés intermedias.
         source: "/api/:path*",
         headers: [{ key: "Cache-Control", value: "no-store" }],
+      },
+      {
+        // Motor y modelo de detección de manos del simulador (~30 MB): que el
+        // navegador no los vuelva a bajar en cada sesión.
+        source: "/simulador-recursos/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800" }],
       },
     ]);
   },
