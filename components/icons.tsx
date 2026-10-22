@@ -137,7 +137,3 @@ export const IconAlert = base(
 export const IconQr = base(
   '<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"/><path d="M14 14h3v3h-3zM18 18h2.5M20.5 14v2M14 20.5h2"/>'
 );
-
-export const IconSimulador = base(
-  '<path d="M4 20l6-8"/><path d="M20 20l-6-8"/><path d="M10 12l-1.5-3M10 12l2.5-1.5"/><path d="M14 12l1.5-3M14 12l-2.5-1.5"/><circle cx="12" cy="5" r="2.5"/>'
-);

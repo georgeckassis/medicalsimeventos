@@ -43,8 +43,7 @@ export const config = {
   matcher: [
     // Afuera del login: la pantalla de login, el formulario público de
     // inscripción por QR, el endpoint del cron (tiene su propio secreto) y
-    // los archivos estáticos (incluido el motor de detección de manos del
-    // simulador, que es una librería pública).
-    "/((?!login|api/login|inscripcion|api/inscripcion|api/cron|simulador-recursos/|_next/static|_next/image|icons/|.*\\.(?:png|svg|jpg|jpeg|webp|gif|ico|webmanifest)$).*)",
+    // los archivos estáticos.
+    "/((?!login|api/login|inscripcion|api/inscripcion|api/cron|_next/static|_next/image|icons/|.*\\.(?:png|svg|jpg|jpeg|webp|gif|ico|webmanifest)$).*)",
   ],
 };
